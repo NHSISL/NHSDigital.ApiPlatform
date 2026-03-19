@@ -3,16 +3,13 @@
 // ---------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Options;
 using NHS.Digital.ApiPlatform.Sdk.Brokers.Https;
 using NHS.Digital.ApiPlatform.Sdk.Brokers.Identifiers;
 using NHS.Digital.ApiPlatform.Sdk.Models.Configurations;
-using NHS.Digital.ApiPlatform.Sdk.Models.Foundations.Patients;
+using NHS.Digital.ApiPlatform.Sdk.Models.Foundations.Pds;
 
 namespace NHS.Digital.ApiPlatform.Sdk.Services.Foundations.Pds
 {
@@ -32,55 +29,57 @@ namespace NHS.Digital.ApiPlatform.Sdk.Services.Foundations.Pds
             this.identifierBroker = identifierBroker;
         }
 
-        public ValueTask<string> SearchPatientsAsync(
+		public ValueTask<string> SearchPatientsAsync(
 			string accessToken,
-			Patient patient,
+			SearchCriteria searchCriteria,
 			CancellationToken cancellationToken = default) =>
-        TryCatch(async () =>
-        {
-            string baseUrl = this.configurations.PersonalDemographicsService.BaseUrl.TrimEnd('/');
-            string url;
+		TryCatch(async () =>
+		{
+			string baseUrl = this.configurations.PersonalDemographicsService.BaseUrl.TrimEnd('/');
+			string url;
 
-            if (!string.IsNullOrWhiteSpace(patient.NhsNumber))
-            {
-                url = $"{baseUrl}/Patient/{patient.NhsNumber}";
-            }
-            else
-            {
-                url = $"{baseUrl}/Patient?family={Uri.EscapeDataString(patient.Surname)}";
+			if (!string.IsNullOrWhiteSpace(searchCriteria.NhsNumber))
+			{
+				url = $"{baseUrl}/Patient/{searchCriteria.NhsNumber}";
+			}
+			else
+			{
+				url = $"{baseUrl}/Patient?family={Uri.EscapeDataString(searchCriteria.Surname)}";
 
-                if (patient.GivenName is not null)
-            {
-                foreach (string givenName in patient.GivenName.Where(n => !string.IsNullOrWhiteSpace(n)))
-                {
-                    url += $"&given={Uri.EscapeDataString(givenName)}";
-                }
-            }
+				if (!string.IsNullOrWhiteSpace(searchCriteria.FirstName))
+				{
+					url += $"&given={Uri.EscapeDataString(searchCriteria.FirstName)}";
+				}
 
-            if (!string.IsNullOrWhiteSpace(patient.Gender))
-            {
-                url += $"&gender={Uri.EscapeDataString(patient.Gender)}";
-            }
+				if (!string.IsNullOrWhiteSpace(searchCriteria.Gender))
+				{
+					url += $"&gender={Uri.EscapeDataString(searchCriteria.Gender)}";
+				}
 
-                if (patient.DateOfBirth != default)
-                {
-                    url += $"&birthdate=eq{patient.DateOfBirth:yyyy-MM-dd}";
-                }
-            }
+				if (!string.IsNullOrWhiteSpace(searchCriteria.DateOfBirth))
+				{
+					url += $"&birthdate=eq{searchCriteria.DateOfBirth}";
+				}
 
-            var response = await this.httpBroker.GetAsync(
-                url,
-                request =>
-                {
-                    request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
-                    request.Headers.Add("X-Request-ID", this.identifierBroker.GetNewGuid().ToString());
-                    request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/fhir+json"));
-                },
-                cancellationToken);
+				if (!string.IsNullOrWhiteSpace(searchCriteria.Postcode))
+				{
+					url += $"&postcode={Uri.EscapeDataString(searchCriteria.Postcode)}";
+				}
+			}
 
-            response.EnsureSuccessStatusCode();
+			var response = await this.httpBroker.GetAsync(
+				url,
+				request =>
+				{
+					request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+					request.Headers.Add("X-Request-ID", this.identifierBroker.GetNewGuid().ToString());
+					request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/fhir+json"));
+				},
+				cancellationToken);
 
-            return await response.Content.ReadAsStringAsync(cancellationToken);
-        });
-    }
+			response.EnsureSuccessStatusCode();
+
+			return await response.Content.ReadAsStringAsync(cancellationToken);
+		});
+	}
 }

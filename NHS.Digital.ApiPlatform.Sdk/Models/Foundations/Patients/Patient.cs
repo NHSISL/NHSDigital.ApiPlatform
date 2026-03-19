@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Net;
+using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace NHS.Digital.ApiPlatform.Sdk.Models.Foundations.Patients
 {
@@ -14,7 +16,7 @@ namespace NHS.Digital.ApiPlatform.Sdk.Models.Foundations.Patients
     {
 		public string NhsNumber { get; set; }
 		public string Title { get; set; }
-		public IEnumerable<string> GivenName { get; set; }
+		public string GivenName { get; set; }
 		public string Surname { get; set; }
 		public DateTimeOffset DateOfBirth { get; set; }
 		public string Gender { get; set; }
@@ -47,5 +49,20 @@ namespace NHS.Digital.ApiPlatform.Sdk.Models.Foundations.Patients
 				};
 			}
 		}
+
+		public string ValidationCode { get; set; }
+		public DateTimeOffset ValidationCodeExpiresOn { get; set; }
+		public DateTimeOffset? ValidationCodeMatchedOn { get; set; }
+		public int RetryCount { get; set; }
+		//public NotificationPreference NotificationPreference { get; set; }
+		public string CreatedBy { get; set; }
+		public DateTimeOffset CreatedDate { get; set; }
+		public string UpdatedBy { get; set; }
+		public DateTimeOffset UpdatedDate { get; set; }
+
+		[NotMapped]
+		[JsonIgnore]
+		public bool IsSensitive { get; set; }
+
 	}
 }

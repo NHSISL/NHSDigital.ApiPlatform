@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NHS.Digital.ApiPlatform.Sdk.Brokers.Storages;
 using NHS.Digital.ApiPlatform.Sdk.Models.Foundations.Patients;
+using NHS.Digital.ApiPlatform.Sdk.Models.Foundations.Pds;
 using NHS.Digital.ApiPlatform.Sdk.Models.Orchestrations.Pds.Exceptions;
 using NHS.Digital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices;
 using NHS.Digital.ApiPlatform.Sdk.Services.Foundations.Pds;
@@ -27,11 +28,10 @@ namespace NHS.Digital.ApiPlatform.Sdk.Services.Orchestrations.Pds
         }
 
         public ValueTask<string> SearchPatientsAsync(
-            Patient patient,
+			SearchCriteria searchCriteria,
             CancellationToken cancellationToken = default) =>
             TryCatch(async () =>
             {
-                //ValidateOnSearchPatientsAsync(family, given, gender, birthdate);
                 string accessToken = await this.careIdentityService.GetAccessTokenAsync(cancellationToken);
 
                 if (string.IsNullOrWhiteSpace(accessToken))
@@ -40,7 +40,7 @@ namespace NHS.Digital.ApiPlatform.Sdk.Services.Orchestrations.Pds
                 }
 
                 return await this.pdsService
-                    .SearchPatientsAsync(accessToken, patient, cancellationToken);
+                    .SearchPatientsAsync(accessToken, searchCriteria, cancellationToken);
             });
     }
 }
