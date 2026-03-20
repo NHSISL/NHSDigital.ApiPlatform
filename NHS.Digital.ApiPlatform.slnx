@@ -22,4 +22,9 @@
     <Project Path="NHS.Digital.ApiPlatform.Sdk.Tests.Unit/NHS.Digital.ApiPlatform.Sdk.Tests.Unit.csproj" />
     <Project Path="NHS.Digital.ApiPlatform.Sdk/NHS.Digital.ApiPlatform.Sdk.csproj" />
   </Folder>
+  <Project Path="reactapp1.client/reactapp1.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="ReactApp1.Server/ReactApp1.Server.csproj" />
 </Solution>
