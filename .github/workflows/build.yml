@@ -145,6 +145,8 @@ jobs:
     - name: Build
       run: dotnet build --no-restore --configuration Release
     - name: Pack NuGet Package
-      run: dotnet pack --configuration Release --include-symbols
+      run: >-
+        dotnet pack --configuration Release --include-symbols
+        /property:PackableProjectExtensions=".csproj;.vbproj;.fsproj"
     - name: Push NuGet Package
       run: dotnet nuget push **/bin/Release/**/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_ACCESS }} --skip-duplicate
