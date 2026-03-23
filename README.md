@@ -19,8 +19,8 @@ This repository provides a SDK for integrating with the
 
 This solution is intentionally split into two focused packages:
 
-- **`NHS.Digital.ApiPlatform.Sdk` (Core)**
-- **`NHS.Digital.ApiPlatform.Sdk.AspNetCore` (Web Integration)**
+- **`NHSDigital.ApiPlatform.Sdk` (Core)**
+- **`NHSDigital.ApiPlatform.Sdk.AspNetCore` (Web Integration)**
 
 ## 🎯 Why Two Packages?
 
@@ -55,7 +55,7 @@ This design ensures the Core SDK can be used in:
 
 ## 🌐 The ASP.NET Core Integration Package
 
-`NHS.Digital.ApiPlatform.Sdk.AspNetCore` provides:
+`NHSDigital.ApiPlatform.Sdk.AspNetCore` provides:
 
 - Session-based implementations of:
   - `IApiPlatformStateBroker`
@@ -102,7 +102,7 @@ This keeps the architecture:
 
 ------------------------------------------------------------------------
 
-## 1️ NHS.Digital.ApiPlatform.Sdk (Core)
+## 1️ NHSDigital.ApiPlatform.Sdk (Core)
 
 Host-agnostic .NET SDK that:
 
@@ -115,11 +115,11 @@ This package can be used in:
 -   ASP.NET (with your own storage implementation)
 
 👉 **Full documentation:**\
-[NHS.Digital.ApiPlatform.Sdk README](NHS.Digital.ApiPlatform.Sdk/README.md)
+[NHSDigital.ApiPlatform.Sdk README](NHSDigital.ApiPlatform.Sdk/README.md)
 
 ------------------------------------------------------------------------
 
-## 2️ NHS.Digital.ApiPlatform.Sdk.AspNetCore
+## 2️ NHSDigital.ApiPlatform.Sdk.AspNetCore
 
 ASP.NET Core adapter for the core SDK.
 
@@ -137,7 +137,7 @@ This is the recommended package for:
 -   BFF architectures
 
 👉 **Full documentation:**\
-[NHS.Digital.ApiPlatform.Sdk.AspNetCore README](NHS.Digital.ApiPlatform.Sdk.AspNetCore/README.md)
+[NHSDigital.ApiPlatform.Sdk.AspNetCore README](NHSDigital.ApiPlatform.Sdk.AspNetCore/README.md)
 
 ------------------------------------------------------------------------
 
@@ -191,7 +191,7 @@ The solution includes:
 
 1. Install the ASP.NET Core integration package:
 
-    `dotnet add package NHS.Digital.ApiPlatform.Sdk.AspNetCore`
+    `dotnet add package NHSDigital.ApiPlatform.Sdk.AspNetCore`
 
    (This package automatically installs the Core SDK as a dependency.)
 
@@ -209,7 +209,7 @@ The solution includes:
    Example: initiating CIS2 login from a controller:
     ```cs
     using Microsoft.AspNetCore.Mvc;
-    using NHS.Digital.ApiPlatform.Sdk.Clients.ApiPlatforms;
+    using NHSDigital.ApiPlatform.Sdk.Clients.ApiPlatforms;
 
     public class AuthController : Controller
     {
@@ -230,7 +230,7 @@ The solution includes:
     }
     ```
     👉 **Full documentation:**\
-    [NHS.Digital.ApiPlatform.Sdk.AspNetCore README](NHS.Digital.ApiPlatform.Sdk.AspNetCore/README.md)
+    [NHSDigital.ApiPlatform.Sdk.AspNetCore README](NHSDigital.ApiPlatform.Sdk.AspNetCore/README.md)
 
 ------------------------------------------------------------------------
 
@@ -238,7 +238,7 @@ The solution includes:
 
 Install the Core package directly:
 
-    `dotnet add package NHS.Digital.ApiPlatform.Sdk`
+    `dotnet add package NHSDigital.ApiPlatform.Sdk`
 
 You must implement:
 
@@ -251,7 +251,7 @@ Then register:
 
 
 👉 **Full documentation:**\
-[NHS.Digital.ApiPlatform.Sdk README](NHS.Digital.ApiPlatform.Sdk/README.md)
+[NHSDigital.ApiPlatform.Sdk README](NHSDigital.ApiPlatform.Sdk/README.md)
 
 ------------------------------------------------------------------------
 

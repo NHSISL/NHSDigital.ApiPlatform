@@ -1,0 +1,66 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>disable</Nullable>
+
+		<Title>NHSDigital.ApiPlatform.Sdk.AspNetCore</Title>
+		<Product>NHSDigital.ApiPlatform.Sdk.AspNetCore</Product>
+		<PackageId>NHSDigital.ApiPlatform.Sdk.AspNetCore</PackageId>
+		<Authors>North East London ICB</Authors>
+		<Company>North East London ICB</Company>
+		<Description>
+			NHS Digital API Platform Client.
+		</Description>
+		<Copyright>North East London ICB - 2026 (c)</Copyright>
+		<PackageIcon>NhsDigitalIcon.png</PackageIcon>
+		<PackageProjectUrl>https://github.com/NHSISL/NHSDigital.ApiPlatform</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/NHSISL/NHSDigital.ApiPlatform</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>NHSISL; NHS Digital; API; Platform; Client; .NET; The Standard;</PackageTags>
+		<PackageReleaseNotes>
+			Initial release of the NHS Digital API Platform Client.
+		</PackageReleaseNotes>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+		<Version>0.2.0.0</Version>
+		<AssemblyVersion>0.2.0.0</AssemblyVersion>
+		<FileVersion>0.2.0.0</FileVersion>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
+		<IsPackable>true</IsPackable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<NoWarn>CS1998</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md">
+			<Pack>true</Pack>
+			<PackagePath></PackagePath>
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Include="..\LICENSE.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="..\Resources\Images\NhsDigitalIcon.png">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<InternalsVisibleTo Include="NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Unit" />
+		<InternalsVisibleTo Include="NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance" />
+		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\NHSDigital.ApiPlatform.Sdk\NHSDigital.ApiPlatform.Sdk.csproj" />
+	</ItemGroup>
+
+</Project>

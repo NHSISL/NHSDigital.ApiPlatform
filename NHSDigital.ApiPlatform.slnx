@@ -1,0 +1,25 @@
+<Solution>
+  <Folder Name="/ApiPlatform/">
+    <File Path=".github/copilot-instructions.md" />
+    <File Path=".github/workflows/build.yml" />
+    <File Path=".github/workflows/prLinter.yml" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE.txt" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/Infrastructure/">
+    <Project Path="NHSDigital.ApiPlatform.Infrastructure/NHSDigital.ApiPlatform.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/Sdk.AspNetCore/">
+    <Project Path="NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance/NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.csproj" />
+    <Project Path="NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Integration/NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Integration.csproj" />
+    <Project Path="NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Unit/NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Unit.csproj" />
+    <Project Path="NHSDigital.ApiPlatform.Sdk.AspNetCore/NHSDigital.ApiPlatform.Sdk.AspNetCore.csproj" />
+  </Folder>
+  <Folder Name="/SDK/">
+    <Project Path="NHSDigital.ApiPlatform.Sdk.Tests.Acceptance/NHSDigital.ApiPlatform.Sdk.Tests.Acceptance.csproj" />
+    <Project Path="NHSDigital.ApiPlatform.Sdk.Tests.Integration/NHSDigital.ApiPlatform.Sdk.Tests.Integration.csproj" />
+    <Project Path="NHSDigital.ApiPlatform.Sdk.Tests.Unit/NHSDigital.ApiPlatform.Sdk.Tests.Unit.csproj" />
+    <Project Path="NHSDigital.ApiPlatform.Sdk/NHSDigital.ApiPlatform.Sdk.csproj" />
+  </Folder>
+</Solution>
