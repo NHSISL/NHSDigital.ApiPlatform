@@ -58,12 +58,12 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
 
 				if (!string.IsNullOrWhiteSpace(searchCriteria.DateOfBirth))
 				{
-					url += $"&birthdate=eq{searchCriteria.DateOfBirth}";
+					url += $"&birthdate=eq{searchCriteria.DateOfBirth:yyyy-MM-dd}";
 				}
 
 				if (!string.IsNullOrWhiteSpace(searchCriteria.Postcode))
 				{
-					url += $"&postcode={Uri.EscapeDataString(searchCriteria.Postcode)}";
+					url += $"&address-postalcode={Uri.EscapeDataString(searchCriteria.Postcode)}";
 				}
 			}
 
