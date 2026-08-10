@@ -28,5 +28,13 @@ namespace NHSDigital.ApiPlatform.Sdk.Brokers.Storages
             CancellationToken cancellationToken = default);
 
         ValueTask ClearRefreshTokenAsync(CancellationToken cancellationToken = default);
+
+        ValueTask StoreActiveRoleAsync(
+            string roleId,
+            CancellationToken cancellationToken = default);
+
+        ValueTask<string?> GetActiveRoleAsync(CancellationToken cancellationToken = default);
+
+        ValueTask ClearActiveRoleAsync(CancellationToken cancellationToken = default);
     }
 }
