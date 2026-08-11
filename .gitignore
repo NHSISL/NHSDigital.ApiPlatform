@@ -417,3 +417,7 @@ FodyWeavers.xsd
 *.msm
 *.msp
 /ReactApp1.Server/appsettings.Development.json
+
+# Sample/example projects - not part of the SDK
+ReactApp1.Server/
+reactapp1.client/
