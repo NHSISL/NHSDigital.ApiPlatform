@@ -1,8 +1,9 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
+using System.Text.RegularExpressions;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds.Exceptions;
 using Xeptions;
@@ -11,6 +12,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
 {
     internal partial class PdsService : IPdsService
     {
+        private static readonly Regex NhsNumberPattern = new Regex(@"^\d{10}$", RegexOptions.Compiled);
+
         public void ValidateOnSearchPatients(string accessToken, SearchCriteria searchCriteria)
         {
             ValidateSearchCriteriaIsNotNull(searchCriteria);
@@ -20,7 +23,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
                     message: "Invalid argument(s), please correct the errors and try again."),
 
                 (Rule: IsInvalid(accessToken), Parameter: nameof(accessToken)),
-                (Rule: IsInvalidSearchCriteria(searchCriteria), Parameter: nameof(searchCriteria)));
+                (Rule: IsInvalidSearchCriteria(searchCriteria), Parameter: nameof(searchCriteria)),
+                (Rule: IsInvalidNhsNumber(searchCriteria.NhsNumber), Parameter: "searchCriteria.NhsNumber"));
         }
 
         private static void ValidateSearchCriteriaIsNotNull(SearchCriteria searchCriteria)
@@ -36,6 +40,19 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
         {
             Condition = string.IsNullOrWhiteSpace(text),
             Message = "Text is required"
+        };
+
+        // An NHS number goes into the request PATH, so escaping alone is not enough: "." and ".." are
+        // unreserved characters that survive Uri.EscapeDataString, and Uri parsing then collapses the
+        // dot segments, silently moving the request off /Patient. Constraining it to the 10 digits an
+        // NHS number actually is closes that off at the source.
+        private static dynamic IsInvalidNhsNumber(string nhsNumber) => new
+        {
+            Condition =
+                string.IsNullOrWhiteSpace(nhsNumber) is false &&
+                NhsNumberPattern.IsMatch(nhsNumber) is false,
+
+            Message = "NHS number must be 10 digits"
         };
 
         private static dynamic IsInvalidSearchCriteria(SearchCriteria searchCriteria) => new
