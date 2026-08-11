@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -124,7 +124,9 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
 
             // when
             ValueTask<NhsUserInfo> getUserInfoTask =
-                this.careIdentityService.GetUserInfoAsync(randomAccessToken, default);
+                this.careIdentityService.GetUserInfoAsync(
+                    randomAccessToken,
+                    cancellationTokenSource.Token);
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await getUserInfoTask);

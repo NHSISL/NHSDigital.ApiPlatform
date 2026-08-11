@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -81,7 +81,9 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Clients.PersonalDemographicsServ
 
             // when
             ValueTask<string> searchPatientsTask =
-                this.personalDemographicsServiceClient.SearchPatientsAsync(randomSearchCriteria);
+                this.personalDemographicsServiceClient.SearchPatientsAsync(
+                    randomSearchCriteria,
+                    cancellationTokenSource.Token);
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await searchPatientsTask);

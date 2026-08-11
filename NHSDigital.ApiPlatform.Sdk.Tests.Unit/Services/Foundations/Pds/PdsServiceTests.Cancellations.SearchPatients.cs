@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -54,7 +54,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
 
             // when
             ValueTask<string> searchPatientsTask =
-                this.pdsService.SearchPatientsAsync(randomAccessToken, randomSearchCriteria);
+                this.pdsService.SearchPatientsAsync(
+                    randomAccessToken,
+                    randomSearchCriteria,
+                    cancellationTokenSource.Token);
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await searchPatientsTask);

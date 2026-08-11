@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -75,7 +75,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Clients.CareIdentityServices
                     .ThrowsAsync(new OperationCanceledException(cancellationTokenSource.Token));
 
             // when
-            ValueTask<string> buildLoginUrlTask = this.careIdentityServiceClient.BuildLoginUrlAsync();
+            ValueTask<string> buildLoginUrlTask =
+                this.careIdentityServiceClient.BuildLoginUrlAsync(cancellationTokenSource.Token);
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await buildLoginUrlTask);
@@ -93,7 +94,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Clients.CareIdentityServices
                     .ThrowsAsync(new OperationCanceledException(cancellationTokenSource.Token));
 
             // when
-            ValueTask logoutTask = this.careIdentityServiceClient.LogoutAsync();
+            ValueTask logoutTask =
+                this.careIdentityServiceClient.LogoutAsync(cancellationTokenSource.Token);
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await logoutTask);
@@ -117,7 +119,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Clients.CareIdentityServices
 
             // when
             ValueTask<NhsUserInfo> getUserInfoTask =
-                this.careIdentityServiceClient.GetUserInfoAsync(randomCode, randomState);
+                this.careIdentityServiceClient.GetUserInfoAsync(
+                    randomCode,
+                    randomState,
+                    cancellationTokenSource.Token);
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await getUserInfoTask);
