@@ -112,14 +112,17 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
         {
             // given
             string randomAccessToken = GetRandomString();
+
+            // The token is live at entry so ThrowIfCancellationRequested lets us through; the broker is what
+            // cancels, which is the path a caller aborting an in-flight request actually takes.
             using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
 
             this.httpBrokerMock.Setup(broker =>
                 broker.GetAsync(
                     It.IsAny<string>(),
                     It.IsAny<Action<HttpRequestMessage>>(),
                     It.IsAny<CancellationToken>()))
+                        .Callback(() => cancellationTokenSource.Cancel())
                         .Throws(new OperationCanceledException(cancellationTokenSource.Token));
 
             // when
@@ -130,6 +133,13 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await getUserInfoTask);
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.GetAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<Action<HttpRequestMessage>>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }

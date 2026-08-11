@@ -59,7 +59,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
 
             var expectedPdsOrchestrationDependencyException =
                 new PdsOrchestrationDependencyException(
-                    message: "PDS orchestration dependency error occurred, fix the errors and try again.",
+                    message: "PDS orchestration dependency error occurred, please contact support.",
                     innerException: dependencyException.InnerException as Xeption);
 
             this.careIdentityServiceMock.Setup(service =>

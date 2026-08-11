@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using FluentAssertions;
 using Moq;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices;
+using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
 using NHSDigital.ApiPlatform.Sdk.Models.Processings.CareIdentityServices.Exceptions;
 using Xunit;
 
@@ -15,63 +16,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
 {
     public partial class CareIdentityServiceProcessingServiceTests
     {
-        [Fact]
-        public async Task ShouldThrowDependencyExceptionOnBuildLoginUrlIfOperationCanceledExceptionOccursAndLogItAsync()
-        {
-            // given
-            var operationCanceledException = new OperationCanceledException();
-
-            CareIdentityServiceProcessingDependencyException expectedException =
-                CreateExpectedTimeoutDependencyException();
-
-            this.careIdentityServiceMock.Setup(service =>
-                service.BuildLoginUrlAsync(It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(operationCanceledException);
-
-            // when
-            ValueTask<string> buildLoginUrlTask =
-                this.careIdentityServiceProcessingService.BuildLoginUrlAsync();
-
-            CareIdentityServiceProcessingDependencyException actualException =
-                await Assert.ThrowsAsync<CareIdentityServiceProcessingDependencyException>(
-                    async () => await buildLoginUrlTask);
-
-            // then
-            actualException.Should().BeEquivalentTo(expectedException);
-
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
-                    Times.Once);
-        }
-
-        [Fact]
-        public async Task ShouldThrowDependencyExceptionOnLogoutIfTaskCanceledExceptionOccursAndLogItAsync()
-        {
-            // given
-            var taskCanceledException = new TaskCanceledException();
-
-            CareIdentityServiceProcessingDependencyException expectedException =
-                CreateExpectedTimeoutDependencyException();
-
-            this.careIdentityServiceMock.Setup(service =>
-                service.LogoutAsync(It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(taskCanceledException);
-
-            // when
-            ValueTask logoutTask = this.careIdentityServiceProcessingService.LogoutAsync();
-
-            CareIdentityServiceProcessingDependencyException actualException =
-                await Assert.ThrowsAsync<CareIdentityServiceProcessingDependencyException>(
-                    async () => await logoutTask);
-
-            // then
-            actualException.Should().BeEquivalentTo(expectedException);
-
-            this.loggingBrokerMock.Verify(broker =>
-                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
-                    Times.Once);
-        }
-
         [Fact]
         public async Task ShouldThrowOperationCanceledExceptionOnBuildLoginUrlIfCancellationRequestedAsync()
         {
@@ -146,25 +90,73 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
         }
 
         [Fact]
-        public async Task ShouldNotWrapOperationCanceledExceptionRaisedByADependencyOnGetAccessTokenAsync()
+        public async Task ShouldRethrowOperationCanceledExceptionRaisedByTheFoundationOnGetAccessTokenAsync()
         {
             // given
+            // The token is live when the call starts, so ThrowIfCancellationRequested lets us through and the
+            // dependency itself is the one that raises the cancellation.
             using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
 
             this.careIdentityServiceMock.Setup(service =>
                 service.GetAccessTokenAsync(It.IsAny<CancellationToken>()))
+                    .Callback(() => cancellationTokenSource.Cancel())
                     .ThrowsAsync(new OperationCanceledException(cancellationTokenSource.Token));
 
             // when
             ValueTask<string> getAccessTokenTask =
-                this.careIdentityServiceProcessingService.GetAccessTokenAsync(
-                    cancellationTokenSource.Token);
+                this.careIdentityServiceProcessingService.GetAccessTokenAsync(cancellationTokenSource.Token);
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await getAccessTokenTask);
 
+            this.careIdentityServiceMock.Verify(service =>
+                service.GetAccessTokenAsync(It.IsAny<CancellationToken>()),
+                    Times.Once);
+
             this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldSurfaceAFoundationTimeoutAsDependencyExceptionOnBuildLoginUrlAndLogItAsync()
+        {
+            // given
+            var timeoutException = new TimeoutException("The dependency operation timed out.");
+
+            var timeoutCareIdentityServiceException =
+                new TimeoutCareIdentityServiceException(
+                    message: "Failed care identity service timeout error occurred, contact support.",
+                    innerException: timeoutException,
+                    data: timeoutException.Data);
+
+            var careIdentityServiceDependencyException =
+                new CareIdentityServiceDependencyException(
+                    message: "Care identity service dependency error occurred, please contact support.",
+                    innerException: timeoutCareIdentityServiceException);
+
+            var expectedException =
+                new CareIdentityServiceProcessingDependencyException(
+                    message: "Care identity service processing dependency error occurred, please contact support.",
+                    innerException: timeoutCareIdentityServiceException);
+
+            this.careIdentityServiceMock.Setup(service =>
+                service.BuildLoginUrlAsync(It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(careIdentityServiceDependencyException);
+
+            // when
+            ValueTask<string> buildLoginUrlTask =
+                this.careIdentityServiceProcessingService.BuildLoginUrlAsync();
+
+            CareIdentityServiceProcessingDependencyException actualException =
+                await Assert.ThrowsAsync<CareIdentityServiceProcessingDependencyException>(
+                    async () => await buildLoginUrlTask);
+
+            // then
+            actualException.Should().BeEquivalentTo(expectedException);
+            actualException.InnerException.InnerException.Should().BeOfType<TimeoutException>();
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
+                    Times.Once);
         }
 
         [Fact]
@@ -199,22 +191,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
             this.careIdentityServiceMock.Verify(service =>
                 service.GetUserInfoAsync(randomAccessToken, cancellationToken),
                     Times.Once);
-        }
-
-        private static CareIdentityServiceProcessingDependencyException CreateExpectedTimeoutDependencyException()
-        {
-            var timeoutException =
-                new TimeoutException("The dependency operation timed out.");
-
-            var timeoutCareIdentityServiceProcessingException =
-                new TimeoutCareIdentityServiceProcessingException(
-                    message: "Failed care identity service processing timeout error occurred, contact support.",
-                    innerException: timeoutException,
-                    data: timeoutException.Data);
-
-            return new CareIdentityServiceProcessingDependencyException(
-                message: "Care identity service processing dependency error occurred, please contact support.",
-                innerException: timeoutCareIdentityServiceProcessingException);
         }
     }
 }

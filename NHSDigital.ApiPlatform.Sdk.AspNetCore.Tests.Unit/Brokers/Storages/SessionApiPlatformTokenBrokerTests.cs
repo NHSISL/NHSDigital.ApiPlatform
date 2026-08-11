@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -114,6 +114,38 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Unit.Brokers.Storages
         }
 
         [Fact]
+        public async Task ShouldStoreRefreshTokenExpiryToTheSecondAsync()
+        {
+            // given
+            // This expiry is the sole input to the decision to silently refresh or sign the user out,
+            // so the round trip through the session has to preserve it.
+            string randomRefreshToken = GetRandomString();
+            DateTimeOffset randomExpiresAtUtc = GetRandomDateTimeOffset();
+
+            DateTimeOffset expectedExpiresAtUtc =
+                DateTimeOffset.FromUnixTimeSeconds(randomExpiresAtUtc.ToUnixTimeSeconds());
+
+            // when
+            await this.apiPlatformTokenBroker.StoreRefreshTokenAsync(randomRefreshToken, randomExpiresAtUtc);
+
+            // then
+            var (_, actualExpiresAtUtc) = await this.apiPlatformTokenBroker.GetRefreshTokenAsync();
+            actualExpiresAtUtc.Should().Be(expectedExpiresAtUtc);
+        }
+
+        [Fact]
+        public async Task ShouldReturnNullsOnGetRefreshTokenIfTokenWasNeverStoredAsync()
+        {
+            // given
+            // when
+            var (actualToken, actualExpiresAtUtc) = await this.apiPlatformTokenBroker.GetRefreshTokenAsync();
+
+            // then
+            actualToken.Should().BeNull();
+            actualExpiresAtUtc.Should().BeNull();
+        }
+
+        [Fact]
         public async Task ShouldClearRefreshTokenAsync()
         {
             // given
@@ -125,8 +157,9 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Unit.Brokers.Storages
             await this.apiPlatformTokenBroker.ClearRefreshTokenAsync();
 
             // then
-            var (actualToken, _) = await this.apiPlatformTokenBroker.GetRefreshTokenAsync();
+            var (actualToken, actualExpiresAtUtc) = await this.apiPlatformTokenBroker.GetRefreshTokenAsync();
             actualToken.Should().BeNull();
+            actualExpiresAtUtc.Should().BeNull();
         }
 
         [Fact]

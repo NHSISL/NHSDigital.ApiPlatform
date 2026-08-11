@@ -42,14 +42,17 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
             // given
             string randomAccessToken = GetRandomString();
             SearchCriteria randomSearchCriteria = CreateRandomSearchCriteriaWithNhsNumber();
+
+            // The token is live at entry so ThrowIfCancellationRequested lets us through; the broker is what
+            // cancels, which is the path a caller aborting an in-flight request actually takes.
             using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
 
             this.httpBrokerMock.Setup(broker =>
                 broker.GetAsync(
                     It.IsAny<string>(),
                     It.IsAny<Action<HttpRequestMessage>>(),
                     It.IsAny<CancellationToken>()))
+                        .Callback(() => cancellationTokenSource.Cancel())
                         .Throws(new OperationCanceledException(cancellationTokenSource.Token));
 
             // when
@@ -61,6 +64,13 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await searchPatientsTask);
+
+            this.httpBrokerMock.Verify(broker =>
+                broker.GetAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<Action<HttpRequestMessage>>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
 
             this.loggingBrokerMock.VerifyNoOtherCalls();
         }

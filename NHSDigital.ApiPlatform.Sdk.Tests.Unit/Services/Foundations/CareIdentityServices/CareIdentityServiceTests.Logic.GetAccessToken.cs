@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -95,15 +95,75 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
         {
             // given
             string randomRefreshToken = GetRandomString();
+            string expiredAccessToken = GetRandomString();
             DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
             TokenResult randomTokenResult = CreateRandomTokenResult();
-            SetupExpiredAccessTokenWithValidRefreshToken(randomRefreshToken, randomDateTimeOffset, randomTokenResult);
+
+            SetupExpiredAccessTokenWithValidRefreshToken(
+                randomRefreshToken,
+                randomDateTimeOffset,
+                randomTokenResult,
+                storedAccessToken: expiredAccessToken,
+                storedAccessExpiresAtUtc: randomDateTimeOffset.AddSeconds(-1));
 
             // when
             string actualAccessToken = await this.careIdentityService.GetAccessTokenAsync();
 
             // then
             actualAccessToken.Should().Be(randomTokenResult.AccessToken);
+            actualAccessToken.Should().NotBe(expiredAccessToken);
+        }
+
+        [Fact]
+        public async Task ShouldRefreshAccessTokenOnGetAccessTokenIfStoredTokenExpiresInsideTheRefreshSkewAsync()
+        {
+            // given
+            string randomRefreshToken = GetRandomString();
+            string nearlyExpiredAccessToken = GetRandomString();
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            TokenResult randomTokenResult = CreateRandomTokenResult();
+
+            // The service refreshes anything expiring within 60 seconds rather than handing back a token
+            // that will die mid-request.
+            SetupExpiredAccessTokenWithValidRefreshToken(
+                randomRefreshToken,
+                randomDateTimeOffset,
+                randomTokenResult,
+                storedAccessToken: nearlyExpiredAccessToken,
+                storedAccessExpiresAtUtc: randomDateTimeOffset.AddSeconds(59));
+
+            // when
+            string actualAccessToken = await this.careIdentityService.GetAccessTokenAsync();
+
+            // then
+            actualAccessToken.Should().Be(randomTokenResult.AccessToken);
+            actualAccessToken.Should().NotBe(nearlyExpiredAccessToken);
+        }
+
+        [Fact]
+        public async Task ShouldReturnStoredAccessTokenOnGetAccessTokenIfItOutlivesTheRefreshSkewAsync()
+        {
+            // given
+            string storedAccessToken = GetRandomString();
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+
+            this.tokenBrokerMock.Setup(broker =>
+                broker.GetAccessTokenAsync(It.IsAny<CancellationToken>()))
+                    .ReturnsAsync((storedAccessToken, randomDateTimeOffset.AddSeconds(61)));
+
+            this.dateTimeBrokerMock.Setup(broker =>
+                broker.GetCurrentDateTimeOffset())
+                    .Returns(randomDateTimeOffset);
+
+            // when
+            string actualAccessToken = await this.careIdentityService.GetAccessTokenAsync();
+
+            // then
+            actualAccessToken.Should().Be(storedAccessToken);
+
+            this.tokenBrokerMock.Verify(broker =>
+                broker.GetRefreshTokenAsync(It.IsAny<CancellationToken>()),
+                    Times.Never);
         }
 
         [Fact]
@@ -134,13 +194,15 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
         private void SetupExpiredAccessTokenWithValidRefreshToken(
             string refreshToken,
             DateTimeOffset currentDateTimeOffset,
-            TokenResult refreshedTokenResult)
+            TokenResult refreshedTokenResult,
+            string storedAccessToken = null,
+            DateTimeOffset? storedAccessExpiresAtUtc = null)
         {
             string randomTokenJson = GetRandomString();
 
             this.tokenBrokerMock.Setup(broker =>
                 broker.GetAccessTokenAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync((null, null));
+                    .ReturnsAsync((storedAccessToken, storedAccessExpiresAtUtc));
 
             this.tokenBrokerMock.Setup(broker =>
                 broker.GetRefreshTokenAsync(It.IsAny<CancellationToken>()))

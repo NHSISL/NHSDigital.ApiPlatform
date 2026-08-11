@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -57,7 +57,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Clients.PersonalDemographicsServ
 
             var expectedException =
                 new PersonalDemographicsServiceClientDependencyValidationException(
-                    message: "Personal demographics service client validation error occurred, " +
+                    message: "Personal demographics service client dependency validation error occurred, " +
                         "fix errors and try again.",
 
                     innerException: dependencyValidationException.InnerException as Xeption);

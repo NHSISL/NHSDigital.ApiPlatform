@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -50,7 +50,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Clients.CareIdentityServices
             // given
             var expectedException =
                 new CareIdentityServiceClientDependencyValidationException(
-                    message: "Care identity service client validation error occurred, fix errors and try again.",
+                    message: "Care identity service client dependency validation error occurred, "
+                        + "fix errors and try again.",
                     innerException: dependencyValidationException.InnerException as Xeption);
 
             this.careIdentityServiceProcessingServiceMock.Setup(service =>
