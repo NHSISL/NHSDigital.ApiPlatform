@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -55,7 +55,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Acceptance.Clients.ApiPlatforms
                 .Given(Request.Create().WithPath($"{FhirPath}/Patient/{randomNhsNumber}").UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(HttpStatusCode.OK)
-                    .WithDelay(TimeSpan.FromSeconds(30))
+                    .WithDelay(TimeSpan.FromSeconds(2))
                     .WithBody("{}"));
 
             SearchCriteria searchCriteria = CreateSearchCriteriaByNhsNumber(randomNhsNumber);

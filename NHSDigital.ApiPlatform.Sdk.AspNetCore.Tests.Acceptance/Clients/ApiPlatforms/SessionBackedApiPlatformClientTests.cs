@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -33,6 +33,7 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
         private readonly ServiceProvider serviceProvider;
         private readonly IServiceScope serviceScope;
         private readonly FakeSession fakeSession;
+        private readonly DefaultHttpContext httpContext;
         private readonly ICareIdentityServiceClient careIdentityServiceClient;
         private readonly IPersonalDemographicsServiceClient personalDemographicsServiceClient;
 
@@ -65,19 +66,8 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
                 Session = this.fakeSession
             };
 
-            IServiceCollection services = new ServiceCollection();
-
-            services.AddSingleton<IHttpContextAccessor>(
-                new HttpContextAccessor { HttpContext = httpContext });
-
-            services.AddApiPlatformSdkCore(this.apiPlatformConfigurations);
-            services.AddApiPlatformSdkAspNetCore();
-
-            // Keep the dependency timeout short so the timeout path is observable in a test run.
-            services.AddHttpClient("NhsApiPlatform")
-                .ConfigureHttpClient(httpClient => httpClient.Timeout = TimeSpan.FromMilliseconds(500));
-
-            this.serviceProvider = services.BuildServiceProvider();
+            this.httpContext = httpContext;
+            this.serviceProvider = BuildServiceProvider(httpClientTimeout: null);
             this.serviceScope = this.serviceProvider.CreateScope();
 
             IApiPlatformClient apiPlatformClient =
@@ -85,6 +75,25 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
 
             this.careIdentityServiceClient = apiPlatformClient.CareIdentityServiceClient;
             this.personalDemographicsServiceClient = apiPlatformClient.PersonalDemographicsServiceClient;
+        }
+
+        private ServiceProvider BuildServiceProvider(TimeSpan? httpClientTimeout)
+        {
+            IServiceCollection services = new ServiceCollection();
+
+            services.AddSingleton<IHttpContextAccessor>(
+                new HttpContextAccessor { HttpContext = this.httpContext });
+
+            services.AddApiPlatformSdkCore(this.apiPlatformConfigurations);
+            services.AddApiPlatformSdkAspNetCore();
+
+            if (httpClientTimeout is not null)
+            {
+                services.AddHttpClient("NhsApiPlatform")
+                    .ConfigureHttpClient(httpClient => httpClient.Timeout = httpClientTimeout.Value);
+            }
+
+            return services.BuildServiceProvider();
         }
 
         private void GivenTokenEndpointReturns(string accessToken, string refreshToken)

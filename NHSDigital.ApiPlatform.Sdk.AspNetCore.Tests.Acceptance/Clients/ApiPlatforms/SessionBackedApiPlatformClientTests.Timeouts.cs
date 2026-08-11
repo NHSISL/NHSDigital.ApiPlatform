@@ -6,6 +6,8 @@ using System;
 using System.Net;
 using System.Threading.Tasks;
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
+using NHSDigital.ApiPlatform.Sdk.Clients.ApiPlatforms;
 using NHSDigital.ApiPlatform.Sdk.Models.Clients.CareIdentityService.Exceptions;
 using NHSDigital.ApiPlatform.Sdk.Models.Clients.Pds.Exceptions;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds;
@@ -17,6 +19,10 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
 {
     public partial class SessionBackedApiPlatformClientTests
     {
+        // Only these two tests need a short dependency timeout. Applying it to the whole class
+        // would leave every other test one slow HTTP call away from failing as a timeout.
+        private static readonly TimeSpan ShortDependencyTimeout = TimeSpan.FromSeconds(1);
+
         [Fact]
         public async Task ShouldThrowDependencyExceptionOnGetUserInfoIfTheTokenEndpointTimesOutAsync()
         {
@@ -25,16 +31,24 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
                 .Given(Request.Create().WithPath(TokenPath).UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(HttpStatusCode.OK)
-                    .WithDelay(TimeSpan.FromSeconds(10))
+                    .WithDelay(TimeSpan.FromSeconds(5))
                     .WithBody("{}"));
 
-            string loginUrl = await this.careIdentityServiceClient.BuildLoginUrlAsync();
+            using ServiceProvider timeoutProvider = BuildServiceProvider(ShortDependencyTimeout);
+            using IServiceScope timeoutScope = timeoutProvider.CreateScope();
+
+            IApiPlatformClient timeoutClient =
+                timeoutScope.ServiceProvider.GetRequiredService<IApiPlatformClient>();
+
+            string loginUrl = await timeoutClient.CareIdentityServiceClient.BuildLoginUrlAsync();
             string state = ExtractStateFromLoginUrl(loginUrl);
 
             // when
             CareIdentityServiceClientDependencyException actualException =
                 await Assert.ThrowsAsync<CareIdentityServiceClientDependencyException>(async () =>
-                    await this.careIdentityServiceClient.GetUserInfoAsync(GetRandomString(), state));
+                    await timeoutClient.CareIdentityServiceClient.GetUserInfoAsync(
+                        GetRandomString(),
+                        state));
 
             // then
             actualException.InnerException.InnerException.Should().BeOfType<TimeoutException>();
@@ -48,13 +62,23 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
         {
             // given
             string randomNhsNumber = GetRandomNhsNumber();
-            await GivenAnAuthenticatedSessionAsync(GetRandomString(), GetRandomString());
+            using ServiceProvider timeoutProvider = BuildServiceProvider(ShortDependencyTimeout);
+            using IServiceScope timeoutScope = timeoutProvider.CreateScope();
+
+            IApiPlatformClient timeoutClient =
+                timeoutScope.ServiceProvider.GetRequiredService<IApiPlatformClient>();
+
+            GivenTokenEndpointReturns(GetRandomString(), GetRandomString());
+            GivenUserInfoEndpointReturns(GetRandomString(), GetRandomString());
+            string loginUrl = await timeoutClient.CareIdentityServiceClient.BuildLoginUrlAsync();
+            string state = ExtractStateFromLoginUrl(loginUrl);
+            await timeoutClient.CareIdentityServiceClient.GetUserInfoAsync(GetRandomString(), state);
 
             this.wireMockServer
                 .Given(Request.Create().WithPath($"{FhirPath}/Patient/{randomNhsNumber}").UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(HttpStatusCode.OK)
-                    .WithDelay(TimeSpan.FromSeconds(10))
+                    .WithDelay(TimeSpan.FromSeconds(5))
                     .WithBody("{}"));
 
             SearchCriteria searchCriteria = CreateSearchCriteriaByNhsNumber(randomNhsNumber);
@@ -62,7 +86,8 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
             // when
             PersonalDemographicsServiceClientDependencyException actualException =
                 await Assert.ThrowsAsync<PersonalDemographicsServiceClientDependencyException>(async () =>
-                    await this.personalDemographicsServiceClient.SearchPatientsAsync(searchCriteria));
+                    await timeoutClient.PersonalDemographicsServiceClient.SearchPatientsAsync(
+                        searchCriteria));
 
             // then
             actualException.InnerException.InnerException.Should().BeOfType<TimeoutException>();

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -38,7 +38,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Acceptance.Clients.ApiPlatforms
         }
 
         [Fact]
-        public async Task ShouldThrowValidationExceptionOnGetUserInfoIfStateDoesNotMatchAsync()
+        public async Task ShouldThrowDependencyValidationExceptionOnGetUserInfoIfStateDoesNotMatchAsync()
         {
             // given
             GivenTokenEndpointReturns(GetRandomString(), GetRandomString());
@@ -59,7 +59,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Acceptance.Clients.ApiPlatforms
 
         [Theory]
         [InlineData(HttpStatusCode.InternalServerError)]
-        [InlineData(HttpStatusCode.NotFound)]
+        [InlineData(HttpStatusCode.BadGateway)]
         public async Task ShouldThrowDependencyExceptionOnSearchPatientsIfPdsFailsAsync(
             HttpStatusCode statusCode)
         {
@@ -73,6 +73,28 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Acceptance.Clients.ApiPlatforms
             PersonalDemographicsServiceClientDependencyException actualException =
                 await Assert.ThrowsAsync<PersonalDemographicsServiceClientDependencyException>(async () =>
                     await this.personalDemographicsServiceClient.SearchPatientsAsync(searchCriteria));
+
+            // then
+            actualException.InnerException.InnerException.Should().BeOfType<HttpRequestException>();
+        }
+
+        [Theory]
+        [InlineData(HttpStatusCode.BadRequest)]
+        [InlineData(HttpStatusCode.NotFound)]
+        [InlineData(HttpStatusCode.Unauthorized)]
+        public async Task ShouldThrowDependencyValidationExceptionOnSearchPatientsIfPdsRejectsTheRequestAsync(
+            HttpStatusCode statusCode)
+        {
+            // given
+            string randomNhsNumber = GetRandomNhsNumber();
+            await GivenAnAuthenticatedSessionAsync();
+            GivenPatientEndpointFailsWith(randomNhsNumber, statusCode);
+            SearchCriteria searchCriteria = CreateSearchCriteriaByNhsNumber(randomNhsNumber);
+
+            // when
+            PersonalDemographicsServiceClientDependencyValidationException actualException =
+                await Assert.ThrowsAsync<PersonalDemographicsServiceClientDependencyValidationException>(
+                    async () => await this.personalDemographicsServiceClient.SearchPatientsAsync(searchCriteria));
 
             // then
             actualException.InnerException.InnerException.Should().BeOfType<HttpRequestException>();
