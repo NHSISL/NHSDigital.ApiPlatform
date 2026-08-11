@@ -27,22 +27,33 @@ jobs:
     - name: Build
       run: dotnet build --no-restore
     - name: Run Unit Tests
-      run: >-
+      run: |
         $projects = Get-ChildItem -Path . -Filter "*Tests.Unit*.csproj" -Recurse
-
+        $failedProjects = @()
         foreach ($project in $projects) {
           Write-Host "Running tests for: $($project.FullName)"
           dotnet test $project.FullName --no-build --verbosity normal
+          if ($LASTEXITCODE -ne 0) { $failedProjects += $project.Name }
+        }
+        if ($failedProjects.Count -gt 0) {
+          Write-Host "::error::Test failures in: $($failedProjects -join ', ')"
+          exit 1
         }
       shell: pwsh
     - name: Run Acceptance Tests
-      run: >-
+      run: |
         $projects = Get-ChildItem -Path . -Filter "*Tests.Acceptance*.csproj" -Recurse
-
+        $failedProjects = @()
         foreach ($project in $projects) {
           Write-Host "Running tests for: $($project.FullName)"
           dotnet test $project.FullName --no-build --verbosity normal
+          if ($LASTEXITCODE -ne 0) { $failedProjects += $project.Name }
         }
+        if ($failedProjects.Count -gt 0) {
+          Write-Host "::error::Test failures in: $($failedProjects -join ', ')"
+          exit 1
+        }
+      shell: pwsh
   add_tag:
     name: Tag and Release
     runs-on: ubuntu-latest
