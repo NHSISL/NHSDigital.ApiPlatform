@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -41,6 +41,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
             actualPdsOrchestrationValidationException
                 .Should().BeEquivalentTo(expectedPdsOrchestrationValidationException);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPdsOrchestrationValidationException))),
+                    Times.Once);
+
             this.careIdentityServiceMock.Verify(service =>
                 service.GetAccessTokenAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
@@ -76,6 +80,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
             // then
             actualPdsOrchestrationValidationException
                 .Should().BeEquivalentTo(expectedPdsOrchestrationValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPdsOrchestrationValidationException))),
+                    Times.Once);
         }
 
         [Fact]
@@ -108,6 +116,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
             // then
             actualPdsOrchestrationValidationException
                 .Should().BeEquivalentTo(expectedPdsOrchestrationValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPdsOrchestrationValidationException))),
+                    Times.Once);
 
             this.pdsServiceMock.Verify(service =>
                 service.SearchPatientsAsync(

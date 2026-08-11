@@ -15,7 +15,29 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
     public partial class PdsServiceTests
     {
         [Fact]
-        public async Task ShouldThrowOperationCanceledExceptionOnSearchPatientsIfTokenIsAlreadyCancelledAsync()
+        public async Task ShouldThrowOperationCanceledExceptionOnSearchPatientsIfCancellationRequestedAsync()
+        {
+            // given
+            string randomAccessToken = GetRandomString();
+            SearchCriteria randomSearchCriteria = CreateRandomSearchCriteriaWithNhsNumber();
+            var cancellationToken = new CancellationToken(canceled: true);
+
+            // when
+            ValueTask<string> searchPatientsTask = this.pdsService.SearchPatientsAsync(
+                randomAccessToken,
+                randomSearchCriteria,
+                cancellationToken);
+
+            // then
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await searchPatientsTask);
+
+            this.httpBrokerMock.VerifyNoOtherCalls();
+            this.tokenBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldNotWrapOperationCanceledExceptionRaisedByABrokerOnSearchPatientsAsync()
         {
             // given
             string randomAccessToken = GetRandomString();
@@ -23,36 +45,12 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
             using var cancellationTokenSource = new CancellationTokenSource();
             cancellationTokenSource.Cancel();
 
-            // when
-            ValueTask<string> searchPatientsTask = this.pdsService.SearchPatientsAsync(
-                randomAccessToken,
-                randomSearchCriteria,
-                cancellationTokenSource.Token);
-
-            // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await searchPatientsTask);
-
-            this.httpBrokerMock.Verify(broker =>
-                broker.GetAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<Action<HttpRequestMessage>>(),
-                    It.IsAny<CancellationToken>()),
-                        Times.Never);
-        }
-
-        [Fact]
-        public async Task ShouldNotWrapOperationCanceledExceptionOnSearchPatientsAsync()
-        {
-            // given
-            string randomAccessToken = GetRandomString();
-            SearchCriteria randomSearchCriteria = CreateRandomSearchCriteriaWithNhsNumber();
-
             this.httpBrokerMock.Setup(broker =>
                 broker.GetAsync(
                     It.IsAny<string>(),
                     It.IsAny<Action<HttpRequestMessage>>(),
                     It.IsAny<CancellationToken>()))
-                        .Throws(new OperationCanceledException());
+                        .Throws(new OperationCanceledException(cancellationTokenSource.Token));
 
             // when
             ValueTask<string> searchPatientsTask =
@@ -60,28 +58,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await searchPatientsTask);
-        }
 
-        [Fact]
-        public async Task ShouldNotWrapTaskCanceledExceptionOnSearchPatientsAsync()
-        {
-            // given
-            string randomAccessToken = GetRandomString();
-            SearchCriteria randomSearchCriteria = CreateRandomSearchCriteriaWithNhsNumber();
-
-            this.httpBrokerMock.Setup(broker =>
-                broker.GetAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<Action<HttpRequestMessage>>(),
-                    It.IsAny<CancellationToken>()))
-                        .Throws(new TaskCanceledException());
-
-            // when
-            ValueTask<string> searchPatientsTask =
-                this.pdsService.SearchPatientsAsync(randomAccessToken, randomSearchCriteria);
-
-            // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await searchPatientsTask);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]

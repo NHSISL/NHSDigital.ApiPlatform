@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -43,6 +43,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
 
             // then
             actualException.Should().BeEquivalentTo(expectedException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -70,6 +74,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
 
             // then
             actualException.Should().BeEquivalentTo(expectedException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -95,6 +103,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
 
             // then
             actualException.Should().BeEquivalentTo(expectedException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -121,6 +133,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
 
             // then
             actualException.Should().BeEquivalentTo(expectedException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -144,6 +160,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
 
             // then
             actualException.Should().BeEquivalentTo(expectedException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
+                    Times.Once);
         }
 
         [Fact]

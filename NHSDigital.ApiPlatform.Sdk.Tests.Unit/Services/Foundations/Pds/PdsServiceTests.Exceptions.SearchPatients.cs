@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -47,6 +47,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
             // then
             actualPdsServiceDependencyException
                 .Should().BeEquivalentTo(expectedPdsServiceDependencyException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPdsServiceDependencyException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -78,6 +82,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
 
             // then
             actualPdsServiceException.Should().BeEquivalentTo(expectedPdsServiceException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPdsServiceException))),
+                    Times.Once);
         }
 
         [Fact]

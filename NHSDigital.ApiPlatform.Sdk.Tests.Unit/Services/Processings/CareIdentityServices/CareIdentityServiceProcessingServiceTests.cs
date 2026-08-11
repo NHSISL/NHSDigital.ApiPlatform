@@ -1,10 +1,12 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using Moq;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Loggings;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
 using NHSDigital.ApiPlatform.Sdk.Models.Processings.CareIdentityServices.Exceptions;
@@ -19,14 +21,18 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
     public partial class CareIdentityServiceProcessingServiceTests
     {
         private readonly Mock<ICareIdentityService> careIdentityServiceMock;
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly ICareIdentityServiceProcessingService careIdentityServiceProcessingService;
 
         public CareIdentityServiceProcessingServiceTests()
         {
             this.careIdentityServiceMock = new Mock<ICareIdentityService>();
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.careIdentityServiceProcessingService =
-                new CareIdentityServiceProcessingService(this.careIdentityServiceMock.Object);
+                new CareIdentityServiceProcessingService(
+                    careIdentityService: this.careIdentityServiceMock.Object,
+                    loggingBroker: this.loggingBrokerMock.Object);
         }
 
         public static TheoryData<Xeption> DependencyValidationExceptions()
@@ -75,6 +81,9 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
                 Sub = GetRandomString(),
                 NhsIdNrbacRoles = new List<NhsNrbacRole>()
             };
+
+        private static Expression<Func<Exception, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => (actualException as Xeption).SameExceptionAs(expectedException);
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: 1, wordMinLength: 8, wordMaxLength: 12).GetValue();

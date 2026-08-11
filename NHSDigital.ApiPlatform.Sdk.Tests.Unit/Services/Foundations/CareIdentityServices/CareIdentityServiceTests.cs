@@ -1,21 +1,24 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using Moq;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Cryptographies;
 using NHSDigital.ApiPlatform.Sdk.Brokers.DateTimes;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Https;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Loggings;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Serializations;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Storages;
 using NHSDigital.ApiPlatform.Sdk.Models.Configurations;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices;
 using NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices;
 using Tynamix.ObjectFiller;
+using Xeptions;
 using Xunit;
 
 namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentityServices
@@ -28,6 +31,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
         private readonly Mock<IDateTimeBroker> dateTimeBrokerMock;
         private readonly Mock<IApiPlatformStateBroker> stateBrokerMock;
         private readonly Mock<IApiPlatformTokenBroker> tokenBrokerMock;
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly ApiPlatformConfigurations apiPlatformConfigurations;
         private readonly ICareIdentityService careIdentityService;
 
@@ -39,6 +43,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             this.dateTimeBrokerMock = new Mock<IDateTimeBroker>();
             this.stateBrokerMock = new Mock<IApiPlatformStateBroker>();
             this.tokenBrokerMock = new Mock<IApiPlatformTokenBroker>();
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
             this.apiPlatformConfigurations = CreateRandomConfigurations();
 
             this.careIdentityService = new CareIdentityService(
@@ -48,7 +53,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
                 cryptoBroker: this.cryptoBrokerMock.Object,
                 dateTimeBroker: this.dateTimeBrokerMock.Object,
                 stateBroker: this.stateBrokerMock.Object,
-                tokenBroker: this.tokenBrokerMock.Object);
+                tokenBroker: this.tokenBrokerMock.Object,
+                loggingBroker: this.loggingBrokerMock.Object);
         }
 
         public static TheoryData<Exception> DependencyExceptions() =>
@@ -93,6 +99,9 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
                     BaseUrl = $"https://{GetRandomString()}/fhir"
                 }
             };
+
+        private static Expression<Func<Exception, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => (actualException as Xeption).SameExceptionAs(expectedException);
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: 1, wordMinLength: 8, wordMaxLength: 12).GetValue();

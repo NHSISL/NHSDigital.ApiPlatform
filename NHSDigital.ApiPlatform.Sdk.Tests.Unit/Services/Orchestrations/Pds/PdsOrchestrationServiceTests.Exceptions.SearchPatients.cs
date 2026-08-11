@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -43,6 +43,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
 
             // then
             actualException.Should().BeEquivalentTo(expectedPdsOrchestrationDependencyValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPdsOrchestrationDependencyValidationException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -72,6 +76,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
 
             // then
             actualException.Should().BeEquivalentTo(expectedPdsOrchestrationDependencyException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPdsOrchestrationDependencyException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -100,6 +108,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
             // then
             actualPdsOrchestrationServiceException
                 .Should().BeEquivalentTo(expectedPdsOrchestrationServiceException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedPdsOrchestrationServiceException))),
+                    Times.Once);
         }
 
         [Fact]

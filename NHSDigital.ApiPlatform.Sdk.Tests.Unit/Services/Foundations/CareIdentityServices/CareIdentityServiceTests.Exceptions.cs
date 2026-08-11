@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -10,6 +10,7 @@ using FluentAssertions;
 using Moq;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
+using Xeptions;
 using Xunit;
 
 namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentityServices
@@ -39,6 +40,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceDependencyException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceDependencyException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceDependencyException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -64,6 +69,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceServiceException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceServiceException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceServiceException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -89,6 +98,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceDependencyException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceDependencyException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceDependencyException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -114,6 +127,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceServiceException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceServiceException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceServiceException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -145,6 +162,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceDependencyException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceDependencyException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceDependencyException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -176,6 +197,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceServiceException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceServiceException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceServiceException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -201,6 +226,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceDependencyException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceDependencyException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceDependencyException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -229,19 +258,28 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceServiceException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceServiceException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceServiceException))),
+                    Times.Once);
         }
 
         private static CareIdentityServiceDependencyException CreateExpectedDependencyException(
             Exception dependencyException)
         {
-            var failedCareIdentityServiceDependencyException =
-                new FailedCareIdentityServiceDependencyException(
+            Xeption expectedInnerException = dependencyException is TimeoutException
+                ? new TimeoutCareIdentityServiceException(
+                    message: "Failed care identity service timeout error occurred, contact support.",
+                    innerException: dependencyException,
+                    data: dependencyException.Data)
+
+                : new FailedCareIdentityServiceDependencyException(
                     message: "Failed care identity service dependency error occurred, please contact support.",
                     innerException: dependencyException);
 
             return new CareIdentityServiceDependencyException(
                 message: "Care identity service dependency error occurred, please contact support.",
-                innerException: failedCareIdentityServiceDependencyException);
+                innerException: expectedInnerException);
         }
 
         private static CareIdentityServiceServiceException CreateExpectedServiceException(Exception serviceException)

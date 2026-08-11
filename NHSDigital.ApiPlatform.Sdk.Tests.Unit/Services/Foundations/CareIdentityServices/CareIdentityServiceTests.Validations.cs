@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -49,6 +49,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceValidationException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceValidationException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -84,6 +88,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceValidationException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceValidationException))),
+                    Times.Once);
         }
 
         [Theory]
@@ -118,6 +126,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceValidationException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceValidationException))),
+                    Times.Once);
 
             this.httpBrokerMock.Verify(broker =>
                 broker.GetAsync(
@@ -161,6 +173,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             actualCareIdentityServiceValidationException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceValidationException);
 
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceValidationException))),
+                    Times.Once);
+
             this.stateBrokerMock.Verify(broker =>
                 broker.ClearCsrfStateAsync(It.IsAny<CancellationToken>()),
                     Times.Never);
@@ -198,6 +214,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceValidationException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceValidationException))),
+                    Times.Once);
         }
 
         [Fact]
@@ -254,6 +274,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
             // then
             actualCareIdentityServiceValidationException
                 .Should().BeEquivalentTo(expectedCareIdentityServiceValidationException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedCareIdentityServiceValidationException))),
+                    Times.Once);
         }
     }
 }

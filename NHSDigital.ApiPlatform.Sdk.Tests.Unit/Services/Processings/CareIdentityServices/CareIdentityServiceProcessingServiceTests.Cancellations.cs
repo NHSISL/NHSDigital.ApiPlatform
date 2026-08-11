@@ -5,8 +5,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions;
 using Moq;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices;
+using NHSDigital.ApiPlatform.Sdk.Models.Processings.CareIdentityServices.Exceptions;
 using Xunit;
 
 namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentityServices
@@ -14,77 +16,145 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
     public partial class CareIdentityServiceProcessingServiceTests
     {
         [Fact]
-        public async Task ShouldThrowOperationCanceledExceptionOnBuildLoginUrlIfTokenIsAlreadyCancelledAsync()
+        public async Task ShouldThrowDependencyExceptionOnBuildLoginUrlIfOperationCanceledExceptionOccursAndLogItAsync()
         {
             // given
-            using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
+            var operationCanceledException = new OperationCanceledException();
+
+            CareIdentityServiceProcessingDependencyException expectedException =
+                CreateExpectedTimeoutDependencyException();
+
+            this.careIdentityServiceMock.Setup(service =>
+                service.BuildLoginUrlAsync(It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(operationCanceledException);
 
             // when
             ValueTask<string> buildLoginUrlTask =
-                this.careIdentityServiceProcessingService.BuildLoginUrlAsync(cancellationTokenSource.Token);
+                this.careIdentityServiceProcessingService.BuildLoginUrlAsync();
+
+            CareIdentityServiceProcessingDependencyException actualException =
+                await Assert.ThrowsAsync<CareIdentityServiceProcessingDependencyException>(
+                    async () => await buildLoginUrlTask);
 
             // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await buildLoginUrlTask);
+            actualException.Should().BeEquivalentTo(expectedException);
 
-            this.careIdentityServiceMock.Verify(service =>
-                service.BuildLoginUrlAsync(It.IsAny<CancellationToken>()),
-                    Times.Never);
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
+                    Times.Once);
         }
 
         [Fact]
-        public async Task ShouldThrowOperationCanceledExceptionOnLogoutIfTokenIsAlreadyCancelledAsync()
+        public async Task ShouldThrowDependencyExceptionOnLogoutIfTaskCanceledExceptionOccursAndLogItAsync()
         {
             // given
-            using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
+            var taskCanceledException = new TaskCanceledException();
+
+            CareIdentityServiceProcessingDependencyException expectedException =
+                CreateExpectedTimeoutDependencyException();
+
+            this.careIdentityServiceMock.Setup(service =>
+                service.LogoutAsync(It.IsAny<CancellationToken>()))
+                    .ThrowsAsync(taskCanceledException);
+
+            // when
+            ValueTask logoutTask = this.careIdentityServiceProcessingService.LogoutAsync();
+
+            CareIdentityServiceProcessingDependencyException actualException =
+                await Assert.ThrowsAsync<CareIdentityServiceProcessingDependencyException>(
+                    async () => await logoutTask);
+
+            // then
+            actualException.Should().BeEquivalentTo(expectedException);
+
+            this.loggingBrokerMock.Verify(broker =>
+                broker.LogErrorAsync(It.Is(SameExceptionAs(expectedException))),
+                    Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldThrowOperationCanceledExceptionOnBuildLoginUrlIfCancellationRequestedAsync()
+        {
+            // given
+            var cancellationToken = new CancellationToken(canceled: true);
+
+            // when
+            ValueTask<string> buildLoginUrlTask =
+                this.careIdentityServiceProcessingService.BuildLoginUrlAsync(cancellationToken);
+
+            // then
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await buildLoginUrlTask);
+
+            this.careIdentityServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowOperationCanceledExceptionOnLogoutIfCancellationRequestedAsync()
+        {
+            // given
+            var cancellationToken = new CancellationToken(canceled: true);
 
             // when
             ValueTask logoutTask =
-                this.careIdentityServiceProcessingService.LogoutAsync(cancellationTokenSource.Token);
+                this.careIdentityServiceProcessingService.LogoutAsync(cancellationToken);
 
             // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await logoutTask);
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await logoutTask);
 
-            this.careIdentityServiceMock.Verify(service =>
-                service.LogoutAsync(It.IsAny<CancellationToken>()),
-                    Times.Never);
+            this.careIdentityServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldThrowOperationCanceledExceptionOnGetUserInfoIfTokenIsAlreadyCancelledAsync()
+        public async Task ShouldThrowOperationCanceledExceptionOnGetAccessTokenIfCancellationRequestedAsync()
+        {
+            // given
+            var cancellationToken = new CancellationToken(canceled: true);
+
+            // when
+            ValueTask<string> getAccessTokenTask =
+                this.careIdentityServiceProcessingService.GetAccessTokenAsync(cancellationToken);
+
+            // then
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await getAccessTokenTask);
+
+            this.careIdentityServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowOperationCanceledExceptionOnGetUserInfoIfCancellationRequestedAsync()
         {
             // given
             string randomCode = GetRandomString();
             string randomState = GetRandomString();
-            using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
+            var cancellationToken = new CancellationToken(canceled: true);
 
             // when
             ValueTask<NhsUserInfo> getUserInfoTask =
                 this.careIdentityServiceProcessingService.GetUserInfoAsync(
                     randomCode,
                     randomState,
-                    cancellationTokenSource.Token);
+                    cancellationToken);
 
             // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await getUserInfoTask);
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await getUserInfoTask);
 
-            this.careIdentityServiceMock.Verify(service =>
-                service.CallbackAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<string>(),
-                    It.IsAny<CancellationToken>()),
-                        Times.Never);
+            this.careIdentityServiceMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldNotWrapOperationCanceledExceptionOnGetAccessTokenAsync()
+        public async Task ShouldNotWrapOperationCanceledExceptionRaisedByADependencyOnGetAccessTokenAsync()
         {
             // given
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
+
             this.careIdentityServiceMock.Setup(service =>
                 service.GetAccessTokenAsync(It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(new OperationCanceledException());
+                    .ThrowsAsync(new OperationCanceledException(cancellationTokenSource.Token));
 
             // when
             ValueTask<string> getAccessTokenTask =
@@ -92,21 +162,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await getAccessTokenTask);
-        }
 
-        [Fact]
-        public async Task ShouldNotWrapTaskCanceledExceptionOnLogoutAsync()
-        {
-            // given
-            this.careIdentityServiceMock.Setup(service =>
-                service.LogoutAsync(It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(new TaskCanceledException());
-
-            // when
-            ValueTask logoutTask = this.careIdentityServiceProcessingService.LogoutAsync();
-
-            // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await logoutTask);
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
@@ -141,6 +198,22 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
             this.careIdentityServiceMock.Verify(service =>
                 service.GetUserInfoAsync(randomAccessToken, cancellationToken),
                     Times.Once);
+        }
+
+        private static CareIdentityServiceProcessingDependencyException CreateExpectedTimeoutDependencyException()
+        {
+            var timeoutException =
+                new TimeoutException("The dependency operation timed out.");
+
+            var timeoutCareIdentityServiceProcessingException =
+                new TimeoutCareIdentityServiceProcessingException(
+                    message: "Failed care identity service processing timeout error occurred, contact support.",
+                    innerException: timeoutException,
+                    data: timeoutException.Data);
+
+            return new CareIdentityServiceProcessingDependencyException(
+                message: "Care identity service processing dependency error occurred, please contact support.",
+                innerException: timeoutCareIdentityServiceProcessingException);
         }
     }
 }

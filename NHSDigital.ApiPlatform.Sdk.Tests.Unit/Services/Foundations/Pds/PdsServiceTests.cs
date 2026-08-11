@@ -1,19 +1,22 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.Http;
 using Moq;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Https;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Identifiers;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Loggings;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Storages;
 using NHSDigital.ApiPlatform.Sdk.Models.Configurations;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds.Exceptions;
 using NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds;
 using Tynamix.ObjectFiller;
+using Xeptions;
 using Xunit;
 
 namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
@@ -23,6 +26,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
         private readonly Mock<IHttpBroker> httpBrokerMock;
         private readonly Mock<IIdentifierBroker> identifierBrokerMock;
         private readonly Mock<IApiPlatformTokenBroker> tokenBrokerMock;
+        private readonly Mock<ILoggingBroker> loggingBrokerMock;
         private readonly ApiPlatformConfigurations apiPlatformConfigurations;
         private readonly IPdsService pdsService;
 
@@ -31,6 +35,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
             this.httpBrokerMock = new Mock<IHttpBroker>();
             this.identifierBrokerMock = new Mock<IIdentifierBroker>();
             this.tokenBrokerMock = new Mock<IApiPlatformTokenBroker>();
+            this.loggingBrokerMock = new Mock<ILoggingBroker>();
 
             this.apiPlatformConfigurations = new ApiPlatformConfigurations
             {
@@ -44,7 +49,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
                 configurations: this.apiPlatformConfigurations,
                 httpBroker: this.httpBrokerMock.Object,
                 identifierBroker: this.identifierBrokerMock.Object,
-                tokenBroker: this.tokenBrokerMock.Object);
+                tokenBroker: this.tokenBrokerMock.Object,
+                loggingBroker: this.loggingBrokerMock.Object);
         }
 
         public static TheoryData<Exception> DependencyExceptions() =>
@@ -86,6 +92,9 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
                 Postcode = GetRandomString()
             };
 
+        private static Expression<Func<Exception, bool>> SameExceptionAs(Xeption expectedException) =>
+            actualException => (actualException as Xeption).SameExceptionAs(expectedException);
+
         private static string GetRandomString() =>
             new MnemonicString(wordCount: 1, wordMinLength: 8, wordMaxLength: 12).GetValue();
 
@@ -98,14 +107,19 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
         private static PdsServiceDependencyException CreateExpectedDependencyException(
             Exception dependencyException)
         {
-            var failedPdsServiceDependencyException =
-                new FailedPdsServiceDependencyException(
+            Xeption expectedInnerException = dependencyException is TimeoutException
+                ? new TimeoutPdsServiceException(
+                    message: "Failed PDS service timeout error occurred, contact support.",
+                    innerException: dependencyException,
+                    data: dependencyException.Data)
+
+                : new FailedPdsServiceDependencyException(
                     message: "Failed PDS service dependency error occurred, please contact support.",
                     innerException: dependencyException);
 
             return new PdsServiceDependencyException(
                 message: "PDS service dependency error occurred, please contact support.",
-                innerException: failedPdsServiceDependencyException);
+                innerException: expectedInnerException);
         }
 
         private static PdsServiceException CreateExpectedServiceException(Exception serviceException)

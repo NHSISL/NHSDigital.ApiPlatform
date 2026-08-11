@@ -15,115 +15,141 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
     public partial class CareIdentityServiceTests
     {
         [Fact]
-        public async Task ShouldThrowOperationCanceledExceptionOnBuildLoginUrlIfTokenIsAlreadyCancelledAsync()
+        public async Task ShouldThrowOperationCanceledExceptionOnBuildLoginUrlIfCancellationRequestedAsync()
         {
             // given
-            using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
+            var cancellationToken = new CancellationToken(canceled: true);
 
             // when
             ValueTask<string> buildLoginUrlTask =
-                this.careIdentityService.BuildLoginUrlAsync(cancellationTokenSource.Token);
+                this.careIdentityService.BuildLoginUrlAsync(cancellationToken);
 
             // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await buildLoginUrlTask);
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await buildLoginUrlTask);
 
             this.cryptoBrokerMock.Verify(broker =>
                 broker.CreateUrlSafeState(It.IsAny<int>()),
                     Times.Never);
+
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldNotWrapOperationCanceledExceptionOnBuildLoginUrlAsync()
+        public async Task ShouldThrowOperationCanceledExceptionOnLogoutIfCancellationRequestedAsync()
         {
             // given
-            this.cryptoBrokerMock.Setup(broker =>
-                broker.CreateUrlSafeState(It.IsAny<int>()))
-                    .Throws(new OperationCanceledException());
+            var cancellationToken = new CancellationToken(canceled: true);
 
             // when
-            ValueTask<string> buildLoginUrlTask = this.careIdentityService.BuildLoginUrlAsync();
-
-            // then
-            await Assert.ThrowsAsync<OperationCanceledException>(async () => await buildLoginUrlTask);
-        }
-
-        [Fact]
-        public async Task ShouldNotWrapOperationCanceledExceptionOnLogoutAsync()
-        {
-            // given
-            this.stateBrokerMock.Setup(broker =>
-                broker.ClearCsrfStateAsync(It.IsAny<CancellationToken>()))
-                    .Throws(new OperationCanceledException());
-
-            // when
-            ValueTask logoutTask = this.careIdentityService.LogoutAsync();
+            ValueTask logoutTask = this.careIdentityService.LogoutAsync(cancellationToken);
 
             // then
             await Assert.ThrowsAsync<OperationCanceledException>(async () => await logoutTask);
+
+            this.stateBrokerMock.VerifyNoOtherCalls();
+            this.tokenBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldNotWrapTaskCanceledExceptionOnGetUserInfoAsync()
+        public async Task ShouldThrowOperationCanceledExceptionOnCallbackIfCancellationRequestedAsync()
+        {
+            // given
+            string randomCode = GetRandomString();
+            string randomState = GetRandomString();
+            var cancellationToken = new CancellationToken(canceled: true);
+
+            // when
+            ValueTask callbackTask = this.careIdentityService.CallbackAsync(
+                randomCode,
+                randomState,
+                cancellationToken);
+
+            // then
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await callbackTask);
+
+            this.stateBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowOperationCanceledExceptionOnGetAccessTokenIfCancellationRequestedAsync()
+        {
+            // given
+            var cancellationToken = new CancellationToken(canceled: true);
+
+            // when
+            ValueTask<string> getAccessTokenTask =
+                this.careIdentityService.GetAccessTokenAsync(cancellationToken);
+
+            // then
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await getAccessTokenTask);
+
+            this.tokenBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldThrowOperationCanceledExceptionOnGetUserInfoIfCancellationRequestedAsync()
         {
             // given
             string randomAccessToken = GetRandomString();
+            var cancellationToken = new CancellationToken(canceled: true);
+
+            // when
+            ValueTask<NhsUserInfo> getUserInfoTask =
+                this.careIdentityService.GetUserInfoAsync(randomAccessToken, cancellationToken);
+
+            // then
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await getUserInfoTask);
+
+            this.httpBrokerMock.VerifyNoOtherCalls();
+            this.loggingBrokerMock.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public async Task ShouldNotWrapOperationCanceledExceptionRaisedByABrokerOnGetUserInfoAsync()
+        {
+            // given
+            string randomAccessToken = GetRandomString();
+            using var cancellationTokenSource = new CancellationTokenSource();
+            cancellationTokenSource.Cancel();
 
             this.httpBrokerMock.Setup(broker =>
                 broker.GetAsync(
                     It.IsAny<string>(),
                     It.IsAny<Action<HttpRequestMessage>>(),
                     It.IsAny<CancellationToken>()))
-                        .Throws(new TaskCanceledException());
+                        .Throws(new OperationCanceledException(cancellationTokenSource.Token));
 
             // when
             ValueTask<NhsUserInfo> getUserInfoTask =
                 this.careIdentityService.GetUserInfoAsync(randomAccessToken, default);
 
             // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await getUserInfoTask);
+            await Assert.ThrowsAsync<OperationCanceledException>(async () => await getUserInfoTask);
+
+            this.loggingBrokerMock.VerifyNoOtherCalls();
         }
 
         [Fact]
-        public async Task ShouldThrowOperationCanceledExceptionOnGetAccessTokenIfTokenIsAlreadyCancelledAsync()
+        public async Task ShouldPropagateCancellationTokenToBrokersOnLogoutAsync()
         {
             // given
             using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
+            CancellationToken cancellationToken = cancellationTokenSource.Token;
 
             // when
-            ValueTask<string> getAccessTokenTask =
-                this.careIdentityService.GetAccessTokenAsync(cancellationTokenSource.Token);
+            await this.careIdentityService.LogoutAsync(cancellationToken);
 
             // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await getAccessTokenTask);
+            this.stateBrokerMock.Verify(broker =>
+                broker.ClearCsrfStateAsync(cancellationToken),
+                    Times.Once);
 
             this.tokenBrokerMock.Verify(broker =>
-                broker.GetAccessTokenAsync(It.IsAny<CancellationToken>()),
-                    Times.Never);
-        }
-
-        [Fact]
-        public async Task ShouldThrowOperationCanceledExceptionOnCallbackIfTokenIsAlreadyCancelledAsync()
-        {
-            // given
-            string randomCode = GetRandomString();
-            string randomState = GetRandomString();
-            using var cancellationTokenSource = new CancellationTokenSource();
-            cancellationTokenSource.Cancel();
-
-            // when
-            ValueTask callbackTask = this.careIdentityService.CallbackAsync(
-                randomCode,
-                randomState,
-                cancellationTokenSource.Token);
-
-            // then
-            await Assert.ThrowsAnyAsync<OperationCanceledException>(async () => await callbackTask);
-
-            this.stateBrokerMock.Verify(broker =>
-                broker.GetCsrfStateAsync(It.IsAny<CancellationToken>()),
-                    Times.Never);
+                broker.ClearAccessTokenAsync(cancellationToken),
+                    Times.Once);
         }
     }
 }
