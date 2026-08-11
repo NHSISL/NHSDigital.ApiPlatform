@@ -180,7 +180,7 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
             new MnemonicString(wordCount: 1, wordMinLength: 8, wordMaxLength: 12).GetValue();
 
         private static string GetRandomNhsNumber() =>
-            new IntRange(min: 100000000, max: 999999999).GetValue().ToString();
+            new IntRange(min: 1000000000, max: 1999999999).GetValue().ToString();
 
         public void Dispose()
         {

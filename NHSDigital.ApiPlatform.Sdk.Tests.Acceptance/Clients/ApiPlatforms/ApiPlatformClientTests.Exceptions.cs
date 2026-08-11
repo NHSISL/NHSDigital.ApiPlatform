@@ -99,5 +99,26 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Acceptance.Clients.ApiPlatforms
             // then
             actualException.InnerException.InnerException.Should().BeOfType<HttpRequestException>();
         }
+
+        [Theory]
+        [InlineData(HttpStatusCode.BadRequest)]
+        [InlineData(HttpStatusCode.Unauthorized)]
+        public async Task ShouldThrowDependencyValidationExceptionOnGetUserInfoIfTheTokenEndpointRejectsUsAsync(
+            HttpStatusCode statusCode)
+        {
+            // given
+            GivenTokenEndpointFailsWith(statusCode);
+            GivenUserInfoEndpointReturns(GetRandomString(), GetRandomString());
+            string loginUrl = await this.careIdentityServiceClient.BuildLoginUrlAsync();
+            string state = ExtractStateFromLoginUrl(loginUrl);
+
+            // when
+            CareIdentityServiceClientDependencyValidationException actualException =
+                await Assert.ThrowsAsync<CareIdentityServiceClientDependencyValidationException>(async () =>
+                    await this.careIdentityServiceClient.GetUserInfoAsync(GetRandomString(), state));
+
+            // then
+            actualException.InnerException.InnerException.Should().BeOfType<HttpRequestException>();
+        }
     }
 }

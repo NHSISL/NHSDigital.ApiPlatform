@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -31,7 +31,7 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
                 .Given(Request.Create().WithPath(TokenPath).UsingPost())
                 .RespondWith(Response.Create()
                     .WithStatusCode(HttpStatusCode.OK)
-                    .WithDelay(TimeSpan.FromSeconds(5))
+                    .WithDelay(TimeSpan.FromSeconds(3))
                     .WithBody("{}"));
 
             using ServiceProvider timeoutProvider = BuildServiceProvider(ShortDependencyTimeout);
@@ -70,15 +70,15 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
 
             GivenTokenEndpointReturns(GetRandomString(), GetRandomString());
             GivenUserInfoEndpointReturns(GetRandomString(), GetRandomString());
-            string loginUrl = await timeoutClient.CareIdentityServiceClient.BuildLoginUrlAsync();
+            string loginUrl = await this.careIdentityServiceClient.BuildLoginUrlAsync();
             string state = ExtractStateFromLoginUrl(loginUrl);
-            await timeoutClient.CareIdentityServiceClient.GetUserInfoAsync(GetRandomString(), state);
+            await this.careIdentityServiceClient.GetUserInfoAsync(GetRandomString(), state);
 
             this.wireMockServer
                 .Given(Request.Create().WithPath($"{FhirPath}/Patient/{randomNhsNumber}").UsingGet())
                 .RespondWith(Response.Create()
                     .WithStatusCode(HttpStatusCode.OK)
-                    .WithDelay(TimeSpan.FromSeconds(5))
+                    .WithDelay(TimeSpan.FromSeconds(3))
                     .WithBody("{}"));
 
             SearchCriteria searchCriteria = CreateSearchCriteriaByNhsNumber(randomNhsNumber);
