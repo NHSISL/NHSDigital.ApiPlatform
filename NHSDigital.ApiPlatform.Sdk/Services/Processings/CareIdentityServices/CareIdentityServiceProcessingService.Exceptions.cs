@@ -1,9 +1,10 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Threading.Tasks;
+using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
 using NHSDigital.ApiPlatform.Sdk.Models.Processings.CareIdentityServices.Exceptions;
 using Xeptions;
 
@@ -30,6 +31,27 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             {
                 throw await CreateValidationExceptionAsync(unauthorisedCareIdentityServiceProcessingException);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceValidationException careIdentityServiceValidationException)
+            {
+                throw await CreateDependencyValidationExceptionAsync(careIdentityServiceValidationException);
+            }
+            catch (CareIdentityServiceDependencyValidationException
+                careIdentityServiceDependencyValidationException)
+            {
+                throw await CreateDependencyValidationExceptionAsync(careIdentityServiceDependencyValidationException);
+            }
+            catch (CareIdentityServiceDependencyException careIdentityServiceDependencyException)
+            {
+                throw await CreateDependencyExceptionAsync(careIdentityServiceDependencyException);
+            }
+            catch (CareIdentityServiceServiceException careIdentityServiceServiceException)
+            {
+                throw await CreateDependencyExceptionAsync(careIdentityServiceServiceException);
+            }
             catch (Exception exception)
             {
                 var failedCareIdentityServiceProcessingException =
@@ -47,6 +69,37 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             try
             {
                 await returningNothingFunction();
+            }
+            catch (InvalidArgumentCareIdentityServiceProcessingException
+                invalidArgumentCareIdentityServiceProcessingException)
+            {
+                throw await CreateValidationExceptionAsync(invalidArgumentCareIdentityServiceProcessingException);
+            }
+            catch (UnauthorisedCareIdentityServiceProcessingException
+                unauthorisedCareIdentityServiceProcessingException)
+            {
+                throw await CreateValidationExceptionAsync(unauthorisedCareIdentityServiceProcessingException);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceValidationException careIdentityServiceValidationException)
+            {
+                throw await CreateDependencyValidationExceptionAsync(careIdentityServiceValidationException);
+            }
+            catch (CareIdentityServiceDependencyValidationException
+                careIdentityServiceDependencyValidationException)
+            {
+                throw await CreateDependencyValidationExceptionAsync(careIdentityServiceDependencyValidationException);
+            }
+            catch (CareIdentityServiceDependencyException careIdentityServiceDependencyException)
+            {
+                throw await CreateDependencyExceptionAsync(careIdentityServiceDependencyException);
+            }
+            catch (CareIdentityServiceServiceException careIdentityServiceServiceException)
+            {
+                throw await CreateDependencyExceptionAsync(careIdentityServiceServiceException);
             }
             catch (Exception exception)
             {
@@ -70,6 +123,30 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
                 innerException: exception);
 
             return careIdentityServiceProcessingValidationException;
+        }
+
+        private async ValueTask<CareIdentityServiceProcessingDependencyValidationException>
+            CreateDependencyValidationExceptionAsync(Xeption exception)
+        {
+            var careIdentityServiceProcessingDependencyValidationException =
+                new CareIdentityServiceProcessingDependencyValidationException(
+                    message: "Care identity service processing dependency validation error occurred, " +
+                        "please fix the errors and try again.",
+
+                    innerException: exception.InnerException as Xeption);
+
+            return careIdentityServiceProcessingDependencyValidationException;
+        }
+
+        private async ValueTask<CareIdentityServiceProcessingDependencyException> CreateDependencyExceptionAsync(
+            Xeption exception)
+        {
+            var careIdentityServiceProcessingDependencyException =
+                new CareIdentityServiceProcessingDependencyException(
+                    message: "Care identity service processing dependency error occurred, please contact support.",
+                    innerException: exception.InnerException as Xeption);
+
+            return careIdentityServiceProcessingDependencyException;
         }
 
         private async ValueTask<CareIdentityServiceProcessingServiceException> CreateServiceExceptionAsync(

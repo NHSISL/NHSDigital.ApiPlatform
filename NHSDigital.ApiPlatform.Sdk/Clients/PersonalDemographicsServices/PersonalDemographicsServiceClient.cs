@@ -32,6 +32,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
 					searchCriteria,
                     cancellationToken);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (PdsOrchestrationValidationException pdsOrchestrationValidationException)
             {
                 throw CreatePersonalDemographicsServiceClientValidationException(
@@ -40,7 +44,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
             catch (PdsOrchestrationDependencyValidationException
                 pdsOrchestrationDependencyValidationException)
             {
-                throw CreatePersonalDemographicsServiceClientValidationException(
+                throw CreatePersonalDemographicsServiceClientDependencyValidationException(
                     pdsOrchestrationDependencyValidationException.InnerException as Xeption);
             }
             catch (PdsOrchestrationDependencyException pdsOrchestrationDependencyException)
@@ -67,6 +71,14 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
             CreatePersonalDemographicsServiceClientValidationException(Xeption innerException)
         {
             return new PersonalDemographicsServiceClientValidationException(
+                message: "Personal demographics service client validation error occurred, fix errors and try again.",
+                innerException);
+        }
+
+        private static PersonalDemographicsServiceClientDependencyValidationException
+            CreatePersonalDemographicsServiceClientDependencyValidationException(Xeption innerException)
+        {
+            return new PersonalDemographicsServiceClientDependencyValidationException(
                 message: "Personal demographics service client validation error occurred, fix errors and try again.",
                 innerException);
         }

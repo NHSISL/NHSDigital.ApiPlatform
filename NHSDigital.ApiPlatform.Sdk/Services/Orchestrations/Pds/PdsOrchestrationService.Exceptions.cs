@@ -20,6 +20,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Orchestrations.Pds
             {
                 return await returningStringFunction();
             }
+            catch (NullSearchCriteriaPdsOrchestrationException nullSearchCriteriaPdsOrchestrationException)
+            {
+                throw await CreateValidationExceptionAsync(nullSearchCriteriaPdsOrchestrationException);
+            }
             catch (InvalidArgumentPdsOrchestrationException invalidArgumentPdsOrchestrationException)
             {
                 throw await CreateValidationExceptionAsync(invalidArgumentPdsOrchestrationException);
@@ -27,6 +31,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Orchestrations.Pds
             catch (UnauthorizedPdsOrchestrationException unauthorizedPdsOrchestrationException)
             {
                 throw await CreateValidationExceptionAsync(unauthorizedPdsOrchestrationException);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (CareIdentityServiceValidationException careIdentityValidationException)
             {

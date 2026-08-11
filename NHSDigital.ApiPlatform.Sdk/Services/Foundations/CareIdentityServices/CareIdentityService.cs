@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 using System;
@@ -45,6 +45,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
         public ValueTask<string> BuildLoginUrlAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             string csrfState = this.cryptoBroker.CreateUrlSafeState();
             await this.stateBroker.StoreCsrfStateAsync(csrfState, cancellationToken);
             CareIdentityConfigurations careIdentityConfigurations = this.configurations.CareIdentity;
@@ -68,6 +69,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
         public ValueTask LogoutAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             await this.stateBroker.ClearCsrfStateAsync(cancellationToken);
             await this.tokenBroker.ClearAccessTokenAsync(cancellationToken);
             await this.tokenBroker.ClearRefreshTokenAsync(cancellationToken);
@@ -80,6 +82,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnCallback(code, state);
 
             string? expectedState = await this.stateBroker.GetCsrfStateAsync(cancellationToken);
@@ -124,6 +127,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
         public ValueTask<string> GetAccessTokenAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var (accessToken, accessExpiresAtUtc) =
                 await this.tokenBroker.GetAccessTokenAsync(cancellationToken);
 
@@ -176,6 +181,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
         public ValueTask<NhsUserInfo> GetUserInfoAsync(string accessToken, CancellationToken cancellationToken) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnGetUserInfo(accessToken);
             CareIdentityConfigurations careIdentityConfigurations = this.configurations.CareIdentity;
 
@@ -196,6 +202,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
         private ValueTask<TokenResult> ExchangeCodeForTokenAsync(string code, CancellationToken cancellationToken) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnExchangeCodeForToken(code);
             CareIdentityConfigurations careIdentityConfigurations = this.configurations.CareIdentity;
 
@@ -224,6 +231,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             CancellationToken cancellationToken) =>
          TryCatch(async () =>
          {
+             cancellationToken.ThrowIfCancellationRequested();
              ValidateOnExchangeRefreshTokenForToken(refreshToken);
 
              CareIdentityConfigurations careIdentityConfigurations = this.configurations.CareIdentity;

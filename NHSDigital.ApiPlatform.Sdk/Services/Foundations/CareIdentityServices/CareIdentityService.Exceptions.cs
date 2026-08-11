@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
 using Xeptions;
@@ -28,15 +29,37 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             {
                 throw await CreateValidationExceptionAsync(unauthorisedCareIdentityServiceException);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (TimeoutException timeoutException)
+            {
+                var failedCareIdentityServiceDependencyException =
+                    new FailedCareIdentityServiceDependencyException(
+                        message: "Failed care identity service dependency error occurred, please contact support.",
+                        innerException: timeoutException);
+
+                throw await CreateDependencyExceptionAsync(failedCareIdentityServiceDependencyException);
+            }
+            catch (HttpRequestException httpRequestException)
+            {
+                var failedCareIdentityServiceDependencyException =
+                    new FailedCareIdentityServiceDependencyException(
+                        message: "Failed care identity service dependency error occurred, please contact support.",
+                        innerException: httpRequestException);
+
+                throw await CreateDependencyExceptionAsync(failedCareIdentityServiceDependencyException);
+            }
             catch (Exception exception)
             {
-                var failedPatientServiceException =
+                var failedCareIdentityServiceException =
                     new FailedCareIdentityServiceException(
                         message: "Failed care identity service error occurred, please contact support.",
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateServiceExceptionAsync(failedPatientServiceException);
+                throw await CreateServiceExceptionAsync(failedCareIdentityServiceException);
             }
         }
 
@@ -54,15 +77,37 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             {
                 throw await CreateValidationExceptionAsync(unauthorisedCareIdentityServiceException);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (TimeoutException timeoutException)
+            {
+                var failedCareIdentityServiceDependencyException =
+                    new FailedCareIdentityServiceDependencyException(
+                        message: "Failed care identity service dependency error occurred, please contact support.",
+                        innerException: timeoutException);
+
+                throw await CreateDependencyExceptionAsync(failedCareIdentityServiceDependencyException);
+            }
+            catch (HttpRequestException httpRequestException)
+            {
+                var failedCareIdentityServiceDependencyException =
+                    new FailedCareIdentityServiceDependencyException(
+                        message: "Failed care identity service dependency error occurred, please contact support.",
+                        innerException: httpRequestException);
+
+                throw await CreateDependencyExceptionAsync(failedCareIdentityServiceDependencyException);
+            }
             catch (Exception exception)
             {
-                var failedPatientServiceException =
+                var failedCareIdentityServiceException =
                     new FailedCareIdentityServiceException(
                         message: "Failed care identity service error occurred, please contact support.",
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateServiceExceptionAsync(failedPatientServiceException);
+                throw await CreateServiceExceptionAsync(failedCareIdentityServiceException);
             }
         }
 
@@ -74,6 +119,16 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
                 innerException: exception);
 
             return careIdentityServiceValidationException;
+        }
+
+        private async ValueTask<CareIdentityServiceDependencyException> CreateDependencyExceptionAsync(
+            Xeption exception)
+        {
+            var careIdentityServiceDependencyException = new CareIdentityServiceDependencyException(
+                message: "Care identity service dependency error occurred, please contact support.",
+                innerException: exception);
+
+            return careIdentityServiceDependencyException;
         }
 
         private async ValueTask<CareIdentityServiceServiceException> CreateServiceExceptionAsync(

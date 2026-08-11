@@ -1,8 +1,9 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds.Exceptions;
 using Xeptions;
@@ -19,11 +20,36 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
             {
                 return await returningStringFunction();
             }
+            catch (NullSearchCriteriaPdsServiceException nullSearchCriteriaPdsServiceException)
+            {
+                throw await CreateValidationExceptionAsync(nullSearchCriteriaPdsServiceException);
+            }
             catch (InvalidArgumentPdsServiceException invalidArgumentPdsServiceException)
             {
                 throw await CreateValidationExceptionAsync(invalidArgumentPdsServiceException);
             }
-            //TODO: Extend this to catch dependency and dependency validation exceptions.
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (TimeoutException timeoutException)
+            {
+                var failedPdsServiceDependencyException =
+                    new FailedPdsServiceDependencyException(
+                        message: "Failed PDS service dependency error occurred, please contact support.",
+                        innerException: timeoutException);
+
+                throw await CreateDependencyExceptionAsync(failedPdsServiceDependencyException);
+            }
+            catch (HttpRequestException httpRequestException)
+            {
+                var failedPdsServiceDependencyException =
+                    new FailedPdsServiceDependencyException(
+                        message: "Failed PDS service dependency error occurred, please contact support.",
+                        innerException: httpRequestException);
+
+                throw await CreateDependencyExceptionAsync(failedPdsServiceDependencyException);
+            }
             catch (Exception exception)
             {
                 var failedPdsServiceException =
@@ -44,6 +70,15 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
                 innerException: exception);
 
             return pdsServiceValidationException;
+        }
+
+        private async ValueTask<PdsServiceDependencyException> CreateDependencyExceptionAsync(Xeption exception)
+        {
+            var pdsServiceDependencyException = new PdsServiceDependencyException(
+                message: "PDS service dependency error occurred, please contact support.",
+                innerException: exception);
+
+            return pdsServiceDependencyException;
         }
 
         private async ValueTask<PdsServiceException> CreateServiceExceptionAsync(Xeption exception)

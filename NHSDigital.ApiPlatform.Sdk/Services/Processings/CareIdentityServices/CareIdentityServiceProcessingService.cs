@@ -1,4 +1,4 @@
-﻿// ---------------------------------------------------------
+// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -19,19 +19,23 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
         public ValueTask<string> BuildLoginUrlAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             return await this.careIdentityService.BuildLoginUrlAsync(cancellationToken);
         });
-
 
         public ValueTask LogoutAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             await this.careIdentityService.LogoutAsync(cancellationToken);
         });
 
         public ValueTask<string> GetAccessTokenAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             return await this.careIdentityService.GetAccessTokenAsync(cancellationToken);
         });
 
@@ -41,6 +45,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnGetUserInfo(code, state);
             await this.careIdentityService.CallbackAsync(code, state, cancellationToken);
             string accessToken = await this.careIdentityService.GetAccessTokenAsync(cancellationToken);
@@ -51,6 +56,5 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
 
             return userInfo;
         });
-
     }
 }
