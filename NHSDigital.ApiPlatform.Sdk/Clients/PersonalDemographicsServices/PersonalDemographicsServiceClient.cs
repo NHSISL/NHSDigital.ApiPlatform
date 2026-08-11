@@ -32,6 +32,11 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
 					searchCriteria,
                     cancellationToken);
             }
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            {
+                throw CreatePersonalDemographicsServiceClientTimeoutDependencyException();
+            }
             catch (OperationCanceledException)
             {
                 throw;
@@ -65,6 +70,22 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
                         innerException: exception,
                         data: exception.Data));
             }
+        }
+
+        private static PersonalDemographicsServiceClientDependencyException
+            CreatePersonalDemographicsServiceClientTimeoutDependencyException()
+        {
+            var timeoutException =
+                new TimeoutException("The dependency operation timed out.");
+
+            var timeoutPersonalDemographicsServiceClientException =
+                new TimeoutPersonalDemographicsServiceClientException(
+                    message: "Failed personal demographics service client timeout error occurred, contact support.",
+                    innerException: timeoutException,
+                    data: timeoutException.Data);
+
+            return CreatePersonalDemographicsServiceClientDependencyException(
+                timeoutPersonalDemographicsServiceClientException);
         }
 
         private static PersonalDemographicsServiceClientValidationException

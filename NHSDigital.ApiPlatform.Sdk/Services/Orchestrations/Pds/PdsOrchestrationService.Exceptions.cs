@@ -1,6 +1,7 @@
 // ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
+
 using System;
 using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
@@ -20,53 +21,84 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Orchestrations.Pds
             {
                 return await returningStringFunction();
             }
-            catch (NullSearchCriteriaPdsOrchestrationException nullSearchCriteriaPdsOrchestrationException)
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
             {
-                throw await CreateValidationExceptionAsync(nullSearchCriteriaPdsOrchestrationException);
-            }
-            catch (InvalidArgumentPdsOrchestrationException invalidArgumentPdsOrchestrationException)
-            {
-                throw await CreateValidationExceptionAsync(invalidArgumentPdsOrchestrationException);
-            }
-            catch (UnauthorizedPdsOrchestrationException unauthorizedPdsOrchestrationException)
-            {
-                throw await CreateValidationExceptionAsync(unauthorizedPdsOrchestrationException);
+                throw await CreateAndLogTimeoutDependencyExceptionAsync();
             }
             catch (OperationCanceledException)
             {
                 throw;
             }
+            catch (NullSearchCriteriaPdsOrchestrationException nullSearchCriteriaPdsOrchestrationException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(nullSearchCriteriaPdsOrchestrationException);
+            }
+            catch (InvalidArgumentPdsOrchestrationException invalidArgumentPdsOrchestrationException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(invalidArgumentPdsOrchestrationException);
+            }
+            catch (UnauthorizedPdsOrchestrationException unauthorizedPdsOrchestrationException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(unauthorizedPdsOrchestrationException);
+            }
+            catch (PdsOrchestrationValidationException)
+            {
+                throw;
+            }
+            catch (PdsOrchestrationDependencyValidationException)
+            {
+                throw;
+            }
+            catch (PdsOrchestrationDependencyException)
+            {
+                throw;
+            }
+            catch (PdsOrchestrationServiceException)
+            {
+                throw;
+            }
             catch (CareIdentityServiceValidationException careIdentityValidationException)
             {
-                throw await CreateDependencyValidationExceptionAsync(careIdentityValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(careIdentityValidationException);
             }
             catch (CareIdentityServiceDependencyValidationException careIdentityDependencyValidationException)
             {
-                throw await CreateDependencyValidationExceptionAsync(careIdentityDependencyValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(careIdentityDependencyValidationException);
             }
             catch (CareIdentityServiceDependencyException careIdentityServiceDependencyException)
             {
-                throw await CreateDependencyExceptionAsync(careIdentityServiceDependencyException);
+                throw await CreateAndLogDependencyExceptionAsync(careIdentityServiceDependencyException);
             }
             catch (CareIdentityServiceServiceException careIdentityServiceServiceException)
             {
-                throw await CreateDependencyExceptionAsync(careIdentityServiceServiceException);
+                throw await CreateAndLogDependencyExceptionAsync(careIdentityServiceServiceException);
             }
-            catch (PdsServiceValidationException pdsIdentityValidationException)
+            catch (PdsServiceValidationException pdsServiceValidationException)
             {
-                throw await CreateDependencyValidationExceptionAsync(pdsIdentityValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(pdsServiceValidationException);
             }
-            catch (PdsServiceDependencyValidationException pdsIdentityDependencyValidationException)
+            catch (PdsServiceDependencyValidationException pdsServiceDependencyValidationException)
             {
-                throw await CreateDependencyValidationExceptionAsync(pdsIdentityDependencyValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(pdsServiceDependencyValidationException);
             }
-            catch (PdsServiceDependencyException pdsIdentityServiceDependencyException)
+            catch (PdsServiceDependencyException pdsServiceDependencyException)
             {
-                throw await CreateDependencyExceptionAsync(pdsIdentityServiceDependencyException);
+                throw await CreateAndLogDependencyExceptionAsync(pdsServiceDependencyException);
             }
-            catch (PdsServiceException pdsIdentityServiceServiceException)
+            catch (PdsServiceException pdsServiceException)
             {
-                throw await CreateDependencyExceptionAsync(pdsIdentityServiceServiceException);
+                throw await CreateAndLogDependencyExceptionAsync(pdsServiceException);
+            }
+            catch (TimeoutException timeoutException)
+            {
+                var timeoutPdsOrchestrationException =
+                    new TimeoutPdsOrchestrationException(
+                        message: "Failed PDS orchestration timeout error occurred, contact support.",
+                        innerException: timeoutException,
+                        data: timeoutException.Data);
+
+                throw await CreateAndLogTimeoutExceptionAsync(timeoutPdsOrchestrationException);
             }
             catch (Exception exception)
             {
@@ -76,46 +108,84 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Orchestrations.Pds
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateServiceExceptionAsync(failedPdsOrchestrationException);
+                throw await CreateAndLogServiceExceptionAsync(failedPdsOrchestrationException);
             }
         }
 
-        private async ValueTask<PdsOrchestrationValidationException> CreateValidationExceptionAsync(Xeption exception)
+        private async ValueTask<PdsOrchestrationDependencyException> CreateAndLogTimeoutDependencyExceptionAsync()
+        {
+            var timeoutException =
+                new TimeoutException("The dependency operation timed out.");
+
+            var timeoutPdsOrchestrationException =
+                new TimeoutPdsOrchestrationException(
+                    message: "Failed PDS orchestration timeout error occurred, contact support.",
+                    innerException: timeoutException,
+                    data: timeoutException.Data);
+
+            return await CreateAndLogTimeoutExceptionAsync(timeoutPdsOrchestrationException);
+        }
+
+        private async ValueTask<PdsOrchestrationDependencyException> CreateAndLogTimeoutExceptionAsync(
+            Xeption exception)
+        {
+            var pdsOrchestrationDependencyException =
+                new PdsOrchestrationDependencyException(
+                    message: "PDS orchestration dependency error occurred, fix the errors and try again.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(pdsOrchestrationDependencyException);
+
+            return pdsOrchestrationDependencyException;
+        }
+
+        private async ValueTask<PdsOrchestrationValidationException> CreateAndLogValidationExceptionAsync(
+            Xeption exception)
         {
             var pdsOrchestrationValidationException =
                 new PdsOrchestrationValidationException(
                     message: "PDS orchestration validation error occurred, fix the errors and try again.",
                     innerException: exception);
 
+            await this.loggingBroker.LogErrorAsync(pdsOrchestrationValidationException);
+
             return pdsOrchestrationValidationException;
         }
 
-        private async ValueTask<PdsOrchestrationDependencyValidationException> CreateDependencyValidationExceptionAsync(
-            Xeption exception)
+        private async ValueTask<PdsOrchestrationDependencyValidationException>
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
             var pdsOrchestrationDependencyValidationException =
                 new PdsOrchestrationDependencyValidationException(
                     message: "PDS orchestration dependency validation error occurred, fix the errors and try again.",
                     innerException: exception.InnerException as Xeption);
 
+            await this.loggingBroker.LogErrorAsync(pdsOrchestrationDependencyValidationException);
+
             return pdsOrchestrationDependencyValidationException;
         }
 
-        private async ValueTask<PdsOrchestrationDependencyException> CreateDependencyExceptionAsync(Xeption exception)
+        private async ValueTask<PdsOrchestrationDependencyException> CreateAndLogDependencyExceptionAsync(
+            Xeption exception)
         {
             var pdsOrchestrationDependencyException =
                 new PdsOrchestrationDependencyException(
                     message: "PDS orchestration dependency error occurred, fix the errors and try again.",
                     innerException: exception.InnerException as Xeption);
 
+            await this.loggingBroker.LogErrorAsync(pdsOrchestrationDependencyException);
+
             return pdsOrchestrationDependencyException;
         }
 
-        private async ValueTask<PdsOrchestrationServiceException> CreateServiceExceptionAsync(Xeption exception)
+        private async ValueTask<PdsOrchestrationServiceException> CreateAndLogServiceExceptionAsync(
+            Xeption exception)
         {
             var pdsOrchestrationServiceException = new PdsOrchestrationServiceException(
                 message: "PDS orchestration service error occurred, please contact support.",
                 innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(pdsOrchestrationServiceException);
 
             return pdsOrchestrationServiceException;
         }

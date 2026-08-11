@@ -20,26 +20,48 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
             {
                 return await returningStringFunction();
             }
-            catch (NullSearchCriteriaPdsServiceException nullSearchCriteriaPdsServiceException)
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
             {
-                throw await CreateValidationExceptionAsync(nullSearchCriteriaPdsServiceException);
-            }
-            catch (InvalidArgumentPdsServiceException invalidArgumentPdsServiceException)
-            {
-                throw await CreateValidationExceptionAsync(invalidArgumentPdsServiceException);
+                throw await CreateAndLogTimeoutDependencyExceptionAsync();
             }
             catch (OperationCanceledException)
             {
                 throw;
             }
+            catch (NullSearchCriteriaPdsServiceException nullSearchCriteriaPdsServiceException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(nullSearchCriteriaPdsServiceException);
+            }
+            catch (InvalidArgumentPdsServiceException invalidArgumentPdsServiceException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(invalidArgumentPdsServiceException);
+            }
+            catch (PdsServiceValidationException)
+            {
+                throw;
+            }
+            catch (PdsServiceDependencyValidationException)
+            {
+                throw;
+            }
+            catch (PdsServiceDependencyException)
+            {
+                throw;
+            }
+            catch (PdsServiceException)
+            {
+                throw;
+            }
             catch (TimeoutException timeoutException)
             {
-                var failedPdsServiceDependencyException =
-                    new FailedPdsServiceDependencyException(
-                        message: "Failed PDS service dependency error occurred, please contact support.",
-                        innerException: timeoutException);
+                var timeoutPdsServiceException =
+                    new TimeoutPdsServiceException(
+                        message: "Failed PDS service timeout error occurred, contact support.",
+                        innerException: timeoutException,
+                        data: timeoutException.Data);
 
-                throw await CreateDependencyExceptionAsync(failedPdsServiceDependencyException);
+                throw await CreateAndLogDependencyExceptionAsync(timeoutPdsServiceException);
             }
             catch (HttpRequestException httpRequestException)
             {
@@ -48,7 +70,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
                         message: "Failed PDS service dependency error occurred, please contact support.",
                         innerException: httpRequestException);
 
-                throw await CreateDependencyExceptionAsync(failedPdsServiceDependencyException);
+                throw await CreateAndLogDependencyExceptionAsync(failedPdsServiceDependencyException);
             }
             catch (Exception exception)
             {
@@ -58,34 +80,55 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateServiceExceptionAsync(failedPdsServiceException);
+                throw await CreateAndLogServiceExceptionAsync(failedPdsServiceException);
             }
         }
 
-        private async ValueTask<PdsServiceValidationException> CreateValidationExceptionAsync(
+        private async ValueTask<PdsServiceDependencyException> CreateAndLogTimeoutDependencyExceptionAsync()
+        {
+            var timeoutException =
+                new TimeoutException("The dependency operation timed out.");
+
+            var timeoutPdsServiceException =
+                new TimeoutPdsServiceException(
+                    message: "Failed PDS service timeout error occurred, contact support.",
+                    innerException: timeoutException,
+                    data: timeoutException.Data);
+
+            return await CreateAndLogDependencyExceptionAsync(timeoutPdsServiceException);
+        }
+
+        private async ValueTask<PdsServiceValidationException> CreateAndLogValidationExceptionAsync(
             Xeption exception)
         {
             var pdsServiceValidationException = new PdsServiceValidationException(
                 message: "PDS service validation error occurred, please fix the errors and try again.",
                 innerException: exception);
 
+            await this.loggingBroker.LogErrorAsync(pdsServiceValidationException);
+
             return pdsServiceValidationException;
         }
 
-        private async ValueTask<PdsServiceDependencyException> CreateDependencyExceptionAsync(Xeption exception)
+        private async ValueTask<PdsServiceDependencyException> CreateAndLogDependencyExceptionAsync(
+            Xeption exception)
         {
             var pdsServiceDependencyException = new PdsServiceDependencyException(
                 message: "PDS service dependency error occurred, please contact support.",
                 innerException: exception);
 
+            await this.loggingBroker.LogErrorAsync(pdsServiceDependencyException);
+
             return pdsServiceDependencyException;
         }
 
-        private async ValueTask<PdsServiceException> CreateServiceExceptionAsync(Xeption exception)
+        private async ValueTask<PdsServiceException> CreateAndLogServiceExceptionAsync(Xeption exception)
         {
             var pdsServiceException = new PdsServiceException(
                 message: "PDS service error occurred, please contact support.",
                 innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(pdsServiceException);
 
             return pdsServiceException;
         }

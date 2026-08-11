@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -25,6 +25,11 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             try
             {
                 return await this.careIdentityServiceProcessingService.BuildLoginUrlAsync(cancellationToken);
+            }
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            {
+                throw CreateCareIdentityServiceClientTimeoutDependencyException();
             }
             catch (OperationCanceledException)
             {
@@ -67,6 +72,11 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 await this.careIdentityServiceProcessingService.LogoutAsync(cancellationToken);
             }
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            {
+                throw CreateCareIdentityServiceClientTimeoutDependencyException();
+            }
             catch (OperationCanceledException)
             {
                 throw;
@@ -107,6 +117,11 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             try
             {
                 return await this.careIdentityServiceProcessingService.GetAccessTokenAsync(cancellationToken);
+            }
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            {
+                throw CreateCareIdentityServiceClientTimeoutDependencyException();
             }
             catch (OperationCanceledException)
             {
@@ -152,6 +167,11 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 return await this.careIdentityServiceProcessingService.GetUserInfoAsync(code, state, cancellationToken);
             }
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            {
+                throw CreateCareIdentityServiceClientTimeoutDependencyException();
+            }
             catch (OperationCanceledException)
             {
                 throw;
@@ -185,6 +205,21 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
                         innerException: exception,
                         data: exception.Data));
             }
+        }
+
+        private static CareIdentityServiceClientDependencyException
+            CreateCareIdentityServiceClientTimeoutDependencyException()
+        {
+            var timeoutException =
+                new TimeoutException("The dependency operation timed out.");
+
+            var timeoutCareIdentityServiceClientException =
+                new TimeoutCareIdentityServiceClientException(
+                    message: "Failed care identity service client timeout error occurred, contact support.",
+                    innerException: timeoutException,
+                    data: timeoutException.Data);
+
+            return CreateCareIdentityServiceClientDependencyException(timeoutCareIdentityServiceClientException);
         }
 
         private static CareIdentityServiceClientValidationException

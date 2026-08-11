@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Cryptographies;
 using NHSDigital.ApiPlatform.Sdk.Brokers.DateTimes;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Https;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Loggings;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Serializations;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Storages;
 using NHSDigital.ApiPlatform.Sdk.Models.Configurations;
@@ -24,6 +25,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly IApiPlatformStateBroker stateBroker;
         private readonly IApiPlatformTokenBroker tokenBroker;
+        private readonly ILoggingBroker loggingBroker;
 
         public CareIdentityService(
             ApiPlatformConfigurations configurations,
@@ -32,8 +34,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             ICryptoBroker cryptoBroker,
             IDateTimeBroker dateTimeBroker,
             IApiPlatformStateBroker stateBroker,
-            IApiPlatformTokenBroker tokenBroker)
+            IApiPlatformTokenBroker tokenBroker,
+            ILoggingBroker loggingBroker)
         {
+            this.loggingBroker = loggingBroker;
             this.configurations = configurations;
             this.httpBroker = httpBroker;
             this.jsonBroker = jsonBroker;

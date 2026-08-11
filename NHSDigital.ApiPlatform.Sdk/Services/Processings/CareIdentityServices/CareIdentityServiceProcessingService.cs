@@ -4,6 +4,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Loggings;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices;
 using NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices;
 
@@ -12,9 +13,15 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
     internal partial class CareIdentityServiceProcessingService : ICareIdentityServiceProcessingService
     {
         private readonly ICareIdentityService careIdentityService;
+        private readonly ILoggingBroker loggingBroker;
 
-        public CareIdentityServiceProcessingService(ICareIdentityService careIdentityService) =>
+        public CareIdentityServiceProcessingService(
+            ICareIdentityService careIdentityService,
+            ILoggingBroker loggingBroker)
+        {
             this.careIdentityService = careIdentityService;
+            this.loggingBroker = loggingBroker;
+        }
 
         public ValueTask<string> BuildLoginUrlAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>

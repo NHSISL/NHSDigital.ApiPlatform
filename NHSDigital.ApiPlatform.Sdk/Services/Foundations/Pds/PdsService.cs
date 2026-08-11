@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Https;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Identifiers;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Loggings;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Storages;
 using NHSDigital.ApiPlatform.Sdk.Models.Configurations;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds;
@@ -20,13 +21,16 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
         private readonly IHttpBroker httpBroker;
         private readonly IIdentifierBroker identifierBroker;
         private readonly IApiPlatformTokenBroker tokenBroker;
+        private readonly ILoggingBroker loggingBroker;
 
         public PdsService(
             ApiPlatformConfigurations configurations,
             IHttpBroker httpBroker,
             IIdentifierBroker identifierBroker,
-            IApiPlatformTokenBroker tokenBroker)
+            IApiPlatformTokenBroker tokenBroker,
+            ILoggingBroker loggingBroker)
         {
+            this.loggingBroker = loggingBroker;
             this.configurations = configurations;
             this.httpBroker = httpBroker;
             this.identifierBroker = identifierBroker;

@@ -21,36 +21,70 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             {
                 return await returningTaskFunction();
             }
-            catch (InvalidArgumentCareIdentityServiceProcessingException
-                invalidArgumentCareIdentityServiceProcessingException)
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
             {
-                throw await CreateValidationExceptionAsync(invalidArgumentCareIdentityServiceProcessingException);
-            }
-            catch (UnauthorisedCareIdentityServiceProcessingException
-                unauthorisedCareIdentityServiceProcessingException)
-            {
-                throw await CreateValidationExceptionAsync(unauthorisedCareIdentityServiceProcessingException);
+                throw await CreateAndLogTimeoutDependencyExceptionAsync();
             }
             catch (OperationCanceledException)
             {
                 throw;
             }
+            catch (InvalidArgumentCareIdentityServiceProcessingException
+                invalidArgumentCareIdentityServiceProcessingException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(
+                    invalidArgumentCareIdentityServiceProcessingException);
+            }
+            catch (UnauthorisedCareIdentityServiceProcessingException
+                unauthorisedCareIdentityServiceProcessingException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(
+                    unauthorisedCareIdentityServiceProcessingException);
+            }
+            catch (CareIdentityServiceProcessingValidationException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceProcessingDependencyValidationException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceProcessingDependencyException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceProcessingServiceException)
+            {
+                throw;
+            }
             catch (CareIdentityServiceValidationException careIdentityServiceValidationException)
             {
-                throw await CreateDependencyValidationExceptionAsync(careIdentityServiceValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(careIdentityServiceValidationException);
             }
             catch (CareIdentityServiceDependencyValidationException
                 careIdentityServiceDependencyValidationException)
             {
-                throw await CreateDependencyValidationExceptionAsync(careIdentityServiceDependencyValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    careIdentityServiceDependencyValidationException);
             }
             catch (CareIdentityServiceDependencyException careIdentityServiceDependencyException)
             {
-                throw await CreateDependencyExceptionAsync(careIdentityServiceDependencyException);
+                throw await CreateAndLogDependencyExceptionAsync(careIdentityServiceDependencyException);
             }
             catch (CareIdentityServiceServiceException careIdentityServiceServiceException)
             {
-                throw await CreateDependencyExceptionAsync(careIdentityServiceServiceException);
+                throw await CreateAndLogDependencyExceptionAsync(careIdentityServiceServiceException);
+            }
+            catch (TimeoutException timeoutException)
+            {
+                var timeoutCareIdentityServiceProcessingException =
+                    new TimeoutCareIdentityServiceProcessingException(
+                        message: "Failed care identity service processing timeout error occurred, contact support.",
+                        innerException: timeoutException,
+                        data: timeoutException.Data);
+
+                throw await CreateAndLogTimeoutExceptionAsync(timeoutCareIdentityServiceProcessingException);
             }
             catch (Exception exception)
             {
@@ -60,7 +94,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateServiceExceptionAsync(failedCareIdentityServiceProcessingException);
+                throw await CreateAndLogServiceExceptionAsync(failedCareIdentityServiceProcessingException);
             }
         }
 
@@ -70,36 +104,70 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             {
                 await returningNothingFunction();
             }
-            catch (InvalidArgumentCareIdentityServiceProcessingException
-                invalidArgumentCareIdentityServiceProcessingException)
+            catch (OperationCanceledException operationCanceledException)
+                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
             {
-                throw await CreateValidationExceptionAsync(invalidArgumentCareIdentityServiceProcessingException);
-            }
-            catch (UnauthorisedCareIdentityServiceProcessingException
-                unauthorisedCareIdentityServiceProcessingException)
-            {
-                throw await CreateValidationExceptionAsync(unauthorisedCareIdentityServiceProcessingException);
+                throw await CreateAndLogTimeoutDependencyExceptionAsync();
             }
             catch (OperationCanceledException)
             {
                 throw;
             }
+            catch (InvalidArgumentCareIdentityServiceProcessingException
+                invalidArgumentCareIdentityServiceProcessingException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(
+                    invalidArgumentCareIdentityServiceProcessingException);
+            }
+            catch (UnauthorisedCareIdentityServiceProcessingException
+                unauthorisedCareIdentityServiceProcessingException)
+            {
+                throw await CreateAndLogValidationExceptionAsync(
+                    unauthorisedCareIdentityServiceProcessingException);
+            }
+            catch (CareIdentityServiceProcessingValidationException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceProcessingDependencyValidationException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceProcessingDependencyException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceProcessingServiceException)
+            {
+                throw;
+            }
             catch (CareIdentityServiceValidationException careIdentityServiceValidationException)
             {
-                throw await CreateDependencyValidationExceptionAsync(careIdentityServiceValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(careIdentityServiceValidationException);
             }
             catch (CareIdentityServiceDependencyValidationException
                 careIdentityServiceDependencyValidationException)
             {
-                throw await CreateDependencyValidationExceptionAsync(careIdentityServiceDependencyValidationException);
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    careIdentityServiceDependencyValidationException);
             }
             catch (CareIdentityServiceDependencyException careIdentityServiceDependencyException)
             {
-                throw await CreateDependencyExceptionAsync(careIdentityServiceDependencyException);
+                throw await CreateAndLogDependencyExceptionAsync(careIdentityServiceDependencyException);
             }
             catch (CareIdentityServiceServiceException careIdentityServiceServiceException)
             {
-                throw await CreateDependencyExceptionAsync(careIdentityServiceServiceException);
+                throw await CreateAndLogDependencyExceptionAsync(careIdentityServiceServiceException);
+            }
+            catch (TimeoutException timeoutException)
+            {
+                var timeoutCareIdentityServiceProcessingException =
+                    new TimeoutCareIdentityServiceProcessingException(
+                        message: "Failed care identity service processing timeout error occurred, contact support.",
+                        innerException: timeoutException,
+                        data: timeoutException.Data);
+
+                throw await CreateAndLogTimeoutExceptionAsync(timeoutCareIdentityServiceProcessingException);
             }
             catch (Exception exception)
             {
@@ -109,12 +177,40 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
                         innerException: exception,
                         data: exception.Data);
 
-                throw await CreateServiceExceptionAsync(failedCareIdentityServiceProcessingException);
+                throw await CreateAndLogServiceExceptionAsync(failedCareIdentityServiceProcessingException);
             }
         }
 
-        private async ValueTask<CareIdentityServiceProcessingValidationException> CreateValidationExceptionAsync(
+        private async ValueTask<CareIdentityServiceProcessingDependencyException>
+            CreateAndLogTimeoutDependencyExceptionAsync()
+        {
+            var timeoutException =
+                new TimeoutException("The dependency operation timed out.");
+
+            var timeoutCareIdentityServiceProcessingException =
+                new TimeoutCareIdentityServiceProcessingException(
+                    message: "Failed care identity service processing timeout error occurred, contact support.",
+                    innerException: timeoutException,
+                    data: timeoutException.Data);
+
+            return await CreateAndLogTimeoutExceptionAsync(timeoutCareIdentityServiceProcessingException);
+        }
+
+        private async ValueTask<CareIdentityServiceProcessingDependencyException> CreateAndLogTimeoutExceptionAsync(
             Xeption exception)
+        {
+            var careIdentityServiceProcessingDependencyException =
+                new CareIdentityServiceProcessingDependencyException(
+                    message: "Care identity service processing dependency error occurred, please contact support.",
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(careIdentityServiceProcessingDependencyException);
+
+            return careIdentityServiceProcessingDependencyException;
+        }
+
+        private async ValueTask<CareIdentityServiceProcessingValidationException>
+            CreateAndLogValidationExceptionAsync(Xeption exception)
         {
             var careIdentityServiceProcessingValidationException = new CareIdentityServiceProcessingValidationException(
                 message: "Care identity service processing validation error occurred, " +
@@ -122,11 +218,13 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
 
                 innerException: exception);
 
+            await this.loggingBroker.LogErrorAsync(careIdentityServiceProcessingValidationException);
+
             return careIdentityServiceProcessingValidationException;
         }
 
         private async ValueTask<CareIdentityServiceProcessingDependencyValidationException>
-            CreateDependencyValidationExceptionAsync(Xeption exception)
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
         {
             var careIdentityServiceProcessingDependencyValidationException =
                 new CareIdentityServiceProcessingDependencyValidationException(
@@ -135,26 +233,32 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
 
                     innerException: exception.InnerException as Xeption);
 
+            await this.loggingBroker.LogErrorAsync(careIdentityServiceProcessingDependencyValidationException);
+
             return careIdentityServiceProcessingDependencyValidationException;
         }
 
-        private async ValueTask<CareIdentityServiceProcessingDependencyException> CreateDependencyExceptionAsync(
-            Xeption exception)
+        private async ValueTask<CareIdentityServiceProcessingDependencyException>
+            CreateAndLogDependencyExceptionAsync(Xeption exception)
         {
             var careIdentityServiceProcessingDependencyException =
                 new CareIdentityServiceProcessingDependencyException(
                     message: "Care identity service processing dependency error occurred, please contact support.",
                     innerException: exception.InnerException as Xeption);
 
+            await this.loggingBroker.LogErrorAsync(careIdentityServiceProcessingDependencyException);
+
             return careIdentityServiceProcessingDependencyException;
         }
 
-        private async ValueTask<CareIdentityServiceProcessingServiceException> CreateServiceExceptionAsync(
+        private async ValueTask<CareIdentityServiceProcessingServiceException> CreateAndLogServiceExceptionAsync(
             Xeption exception)
         {
             var careIdentityServiceProcessingServiceException = new CareIdentityServiceProcessingServiceException(
                 message: "Care identity service processing error occurred, please contact support.",
                 innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(careIdentityServiceProcessingServiceException);
 
             return careIdentityServiceProcessingServiceException;
         }
