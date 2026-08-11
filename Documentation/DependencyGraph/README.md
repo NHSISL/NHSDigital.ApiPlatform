@@ -86,7 +86,12 @@ enabled once in the repository's Settings → Pages (source: GitHub Actions).
   Sdk.AspNetCore. `AddApiPlatformSdkInMemoryStorage` uses `TryAddSingleton`,
   but `AddApiPlatformSdkAspNetCore` uses plain `AddScoped` — which appends
   rather than no-ops, and the last registration wins. So calling both in
-  either order leaves a web host on the session-backed brokers.
+  either order leaves a web host on the session-backed brokers. One caveat:
+  last-wins governs `GetService`/`GetRequiredService` only. If
+  `AddApiPlatformSdkInMemoryStorage` ran first its singleton descriptor is
+  still in the collection, so `GetServices<IApiPlatformStateBroker>()` returns
+  both — a host that enumerates implementations can still reach the
+  process-wide singleton.
 - **The in-memory brokers are singletons and hold one user's state.** Fine
   for a console app or a test; wrong for a multi-user web host.
 - **CIS2 runs without PKCE** — the code says so explicitly; only `client_id`,
