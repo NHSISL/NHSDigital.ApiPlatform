@@ -1,9 +1,10 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds.Exceptions;
 using Xeptions;
@@ -14,14 +15,16 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
     {
         private delegate ValueTask<string> ReturningStringFunction();
 
-        private async ValueTask<string> TryCatch(ReturningStringFunction returningStringFunction)
+        private async ValueTask<string> TryCatch(
+            ReturningStringFunction returningStringFunction,
+            CancellationToken cancellationToken)
         {
             try
             {
                 return await returningStringFunction();
             }
-            catch (OperationCanceledException operationCanceledException)
-                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested is false)
             {
                 throw await CreateAndLogTimeoutDependencyExceptionAsync();
             }

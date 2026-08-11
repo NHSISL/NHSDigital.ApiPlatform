@@ -68,7 +68,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             }
 
             return url;
-        });
+        }, cancellationToken);
 
         public ValueTask LogoutAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
@@ -78,7 +78,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             await this.tokenBroker.ClearAccessTokenAsync(cancellationToken);
             await this.tokenBroker.ClearRefreshTokenAsync(cancellationToken);
             await this.tokenBroker.ClearActiveRoleAsync(cancellationToken);
-        });
+        }, cancellationToken);
 
         public ValueTask CallbackAsync(
             string code,
@@ -120,7 +120,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
                     userInfo.NhsIdNrbacRoles[0].PersonRoleId,
                     cancellationToken);
             }
-        });
+        }, cancellationToken);
 
         public ValueTask<string> GetAccessTokenAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
@@ -174,7 +174,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             ValidateAccessToken(refreshed.AccessToken);
 
             return refreshed.AccessToken;
-        });
+        }, cancellationToken);
 
         public ValueTask<NhsUserInfo> GetUserInfoAsync(string accessToken, CancellationToken cancellationToken) =>
         TryCatch(async () =>
@@ -195,7 +195,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             NhsUserInfo? userInfo = this.jsonBroker.Deserialize<NhsUserInfo>(json);
 
             return userInfo ?? throw new InvalidOperationException("UserInfo endpoint returned an invalid payload.");
-        });
+        }, cancellationToken);
 
         private ValueTask<TokenResult> ExchangeCodeForTokenAsync(string code, CancellationToken cancellationToken) =>
         TryCatch(async () =>
@@ -222,7 +222,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             TokenResult? token = this.jsonBroker.Deserialize<TokenResult>(json);
 
             return token ?? throw new InvalidOperationException("Token endpoint returned an invalid payload.");
-        });
+        }, cancellationToken);
 
         private ValueTask<TokenResult> ExchangeRefreshTokenForTokenAsync(
             string refreshToken,
@@ -251,6 +251,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
              TokenResult? token = this.jsonBroker.Deserialize<TokenResult>(json);
 
              return token ?? throw new InvalidOperationException("Token endpoint returned an invalid payload.");
-         });
+         }, cancellationToken);
     }
 }

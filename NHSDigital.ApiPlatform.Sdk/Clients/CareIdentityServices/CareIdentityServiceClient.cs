@@ -26,8 +26,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 return await this.careIdentityServiceProcessingService.BuildLoginUrlAsync(cancellationToken);
             }
-            catch (OperationCanceledException operationCanceledException)
-                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested is false)
             {
                 throw CreateCareIdentityServiceClientTimeoutDependencyException();
             }
@@ -72,8 +72,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 await this.careIdentityServiceProcessingService.LogoutAsync(cancellationToken);
             }
-            catch (OperationCanceledException operationCanceledException)
-                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested is false)
             {
                 throw CreateCareIdentityServiceClientTimeoutDependencyException();
             }
@@ -118,8 +118,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 return await this.careIdentityServiceProcessingService.GetAccessTokenAsync(cancellationToken);
             }
-            catch (OperationCanceledException operationCanceledException)
-                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested is false)
             {
                 throw CreateCareIdentityServiceClientTimeoutDependencyException();
             }
@@ -167,8 +167,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 return await this.careIdentityServiceProcessingService.GetUserInfoAsync(code, state, cancellationToken);
             }
-            catch (OperationCanceledException operationCanceledException)
-                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested is false)
             {
                 throw CreateCareIdentityServiceClientTimeoutDependencyException();
             }

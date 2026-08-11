@@ -32,8 +32,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
 					searchCriteria,
                     cancellationToken);
             }
-            catch (OperationCanceledException operationCanceledException)
-                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested is false)
             {
                 throw CreatePersonalDemographicsServiceClientTimeoutDependencyException();
             }

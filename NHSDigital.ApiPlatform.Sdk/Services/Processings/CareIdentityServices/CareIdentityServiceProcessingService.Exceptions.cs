@@ -1,8 +1,9 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
 using NHSDigital.ApiPlatform.Sdk.Models.Processings.CareIdentityServices.Exceptions;
@@ -15,14 +16,16 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
         private delegate ValueTask<T> ReturningTaskFunction<T>();
         private delegate ValueTask ReturningNothingFunction();
 
-        private async ValueTask<T> TryCatch<T>(ReturningTaskFunction<T> returningTaskFunction)
+        private async ValueTask<T> TryCatch<T>(
+            ReturningTaskFunction<T> returningTaskFunction,
+            CancellationToken cancellationToken)
         {
             try
             {
                 return await returningTaskFunction();
             }
-            catch (OperationCanceledException operationCanceledException)
-                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested is false)
             {
                 throw await CreateAndLogTimeoutDependencyExceptionAsync();
             }
@@ -98,14 +101,16 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             }
         }
 
-        private async ValueTask TryCatch(ReturningNothingFunction returningNothingFunction)
+        private async ValueTask TryCatch(
+            ReturningNothingFunction returningNothingFunction,
+            CancellationToken cancellationToken)
         {
             try
             {
                 await returningNothingFunction();
             }
-            catch (OperationCanceledException operationCanceledException)
-                when (operationCanceledException.CancellationToken.IsCancellationRequested is false)
+            catch (OperationCanceledException)
+                when (cancellationToken.IsCancellationRequested is false)
             {
                 throw await CreateAndLogTimeoutDependencyExceptionAsync();
             }

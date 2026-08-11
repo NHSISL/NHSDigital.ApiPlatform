@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 using System.Threading;
@@ -38,6 +38,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Orchestrations.Pds
 
             return await this.pdsService
                 .SearchPatientsAsync(accessToken, searchCriteria, cancellationToken);
-        });
+        }, cancellationToken);
     }
 }

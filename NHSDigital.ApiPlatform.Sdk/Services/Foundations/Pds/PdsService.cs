@@ -97,6 +97,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
             response.EnsureSuccessStatusCode();
 
             return await response.Content.ReadAsStringAsync(cancellationToken);
-        });
+        }, cancellationToken);
     }
 }
