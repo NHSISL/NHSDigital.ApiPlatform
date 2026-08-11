@@ -421,3 +421,9 @@ FodyWeavers.xsd
 # Sample/example projects - not part of the SDK
 ReactApp1.Server/
 reactapp1.client/
+
+# Integration/acceptance test local credentials
+NHSDigital.ApiPlatform.Sdk.Tests.Integration/appsettings.Development.json
+NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Integration/appsettings.Development.json
+NHSDigital.ApiPlatform.Sdk.Tests.Acceptance/appsettings.Development.json
+NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance/appsettings.Development.json
