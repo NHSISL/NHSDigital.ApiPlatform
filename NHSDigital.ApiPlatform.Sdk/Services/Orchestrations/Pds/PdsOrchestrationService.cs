@@ -38,6 +38,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Orchestrations.Pds
 
             return await this.pdsService
                 .SearchPatientsAsync(accessToken, searchCriteria, cancellationToken);
-        }, cancellationToken);
+        });
     }
 }

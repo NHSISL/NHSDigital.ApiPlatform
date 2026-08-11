@@ -3,7 +3,6 @@
 // ---------------------------------------------------------
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
 using NHSDigital.ApiPlatform.Sdk.Models.Processings.CareIdentityServices.Exceptions;
@@ -16,20 +15,13 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
         private delegate ValueTask<T> ReturningTaskFunction<T>();
         private delegate ValueTask ReturningNothingFunction();
 
-        private async ValueTask<T> TryCatch<T>(
-            ReturningTaskFunction<T> returningTaskFunction,
-            CancellationToken cancellationToken)
+        private async ValueTask<T> TryCatch<T>(ReturningTaskFunction<T> returningTaskFunction)
         {
             try
             {
                 return await returningTaskFunction();
             }
             catch (OperationCanceledException)
-                when (cancellationToken.IsCancellationRequested is false)
-            {
-                throw await CreateAndLogTimeoutDependencyExceptionAsync();
-            }
-            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -79,16 +71,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             {
                 throw await CreateAndLogDependencyExceptionAsync(careIdentityServiceServiceException);
             }
-            catch (TimeoutException timeoutException)
-            {
-                var timeoutCareIdentityServiceProcessingException =
-                    new TimeoutCareIdentityServiceProcessingException(
-                        message: "Failed care identity service processing timeout error occurred, contact support.",
-                        innerException: timeoutException,
-                        data: timeoutException.Data);
-
-                throw await CreateAndLogTimeoutExceptionAsync(timeoutCareIdentityServiceProcessingException);
-            }
             catch (Exception exception)
             {
                 var failedCareIdentityServiceProcessingException =
@@ -101,20 +83,13 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             }
         }
 
-        private async ValueTask TryCatch(
-            ReturningNothingFunction returningNothingFunction,
-            CancellationToken cancellationToken)
+        private async ValueTask TryCatch(ReturningNothingFunction returningNothingFunction)
         {
             try
             {
                 await returningNothingFunction();
             }
             catch (OperationCanceledException)
-                when (cancellationToken.IsCancellationRequested is false)
-            {
-                throw await CreateAndLogTimeoutDependencyExceptionAsync();
-            }
-            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -164,16 +139,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             {
                 throw await CreateAndLogDependencyExceptionAsync(careIdentityServiceServiceException);
             }
-            catch (TimeoutException timeoutException)
-            {
-                var timeoutCareIdentityServiceProcessingException =
-                    new TimeoutCareIdentityServiceProcessingException(
-                        message: "Failed care identity service processing timeout error occurred, contact support.",
-                        innerException: timeoutException,
-                        data: timeoutException.Data);
-
-                throw await CreateAndLogTimeoutExceptionAsync(timeoutCareIdentityServiceProcessingException);
-            }
             catch (Exception exception)
             {
                 var failedCareIdentityServiceProcessingException =
@@ -184,34 +149,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
 
                 throw await CreateAndLogServiceExceptionAsync(failedCareIdentityServiceProcessingException);
             }
-        }
-
-        private async ValueTask<CareIdentityServiceProcessingDependencyException>
-            CreateAndLogTimeoutDependencyExceptionAsync()
-        {
-            var timeoutException =
-                new TimeoutException("The dependency operation timed out.");
-
-            var timeoutCareIdentityServiceProcessingException =
-                new TimeoutCareIdentityServiceProcessingException(
-                    message: "Failed care identity service processing timeout error occurred, contact support.",
-                    innerException: timeoutException,
-                    data: timeoutException.Data);
-
-            return await CreateAndLogTimeoutExceptionAsync(timeoutCareIdentityServiceProcessingException);
-        }
-
-        private async ValueTask<CareIdentityServiceProcessingDependencyException> CreateAndLogTimeoutExceptionAsync(
-            Xeption exception)
-        {
-            var careIdentityServiceProcessingDependencyException =
-                new CareIdentityServiceProcessingDependencyException(
-                    message: "Care identity service processing dependency error occurred, please contact support.",
-                    innerException: exception);
-
-            await this.loggingBroker.LogErrorAsync(careIdentityServiceProcessingDependencyException);
-
-            return careIdentityServiceProcessingDependencyException;
         }
 
         private async ValueTask<CareIdentityServiceProcessingValidationException>

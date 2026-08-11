@@ -29,14 +29,14 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             cancellationToken.ThrowIfCancellationRequested();
 
             return await this.careIdentityService.BuildLoginUrlAsync(cancellationToken);
-        }, cancellationToken);
+        });
 
         public ValueTask LogoutAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
             cancellationToken.ThrowIfCancellationRequested();
             await this.careIdentityService.LogoutAsync(cancellationToken);
-        }, cancellationToken);
+        });
 
         public ValueTask<string> GetAccessTokenAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
@@ -44,7 +44,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
             cancellationToken.ThrowIfCancellationRequested();
 
             return await this.careIdentityService.GetAccessTokenAsync(cancellationToken);
-        }, cancellationToken);
+        });
 
         public ValueTask<NhsUserInfo> GetUserInfoAsync(
             string code,
@@ -62,6 +62,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Processings.CareIdentityServices
                 .GetUserInfoAsync(accessToken, cancellationToken);
 
             return userInfo;
-        }, cancellationToken);
+        });
     }
 }

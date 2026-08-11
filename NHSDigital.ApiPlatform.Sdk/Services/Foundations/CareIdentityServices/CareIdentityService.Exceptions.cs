@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,6 +71,19 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
                         data: timeoutException.Data);
 
                 throw await CreateAndLogDependencyExceptionAsync(timeoutCareIdentityServiceException);
+            }
+            catch (HttpRequestException httpRequestException)
+                when (IsDependencyValidationStatusCode(httpRequestException.StatusCode))
+            {
+                var invalidCareIdentityServiceDependencyException =
+                    new InvalidCareIdentityServiceDependencyException(
+                        message: "Invalid care identity service dependency error occurred, " +
+                            "fix the errors and try again.",
+
+                        innerException: httpRequestException);
+
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    invalidCareIdentityServiceDependencyException);
             }
             catch (HttpRequestException httpRequestException)
             {
@@ -148,6 +162,19 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
                 throw await CreateAndLogDependencyExceptionAsync(timeoutCareIdentityServiceException);
             }
             catch (HttpRequestException httpRequestException)
+                when (IsDependencyValidationStatusCode(httpRequestException.StatusCode))
+            {
+                var invalidCareIdentityServiceDependencyException =
+                    new InvalidCareIdentityServiceDependencyException(
+                        message: "Invalid care identity service dependency error occurred, " +
+                            "fix the errors and try again.",
+
+                        innerException: httpRequestException);
+
+                throw await CreateAndLogDependencyValidationExceptionAsync(
+                    invalidCareIdentityServiceDependencyException);
+            }
+            catch (HttpRequestException httpRequestException)
             {
                 var failedCareIdentityServiceDependencyException =
                     new FailedCareIdentityServiceDependencyException(
@@ -193,6 +220,26 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             await this.loggingBroker.LogErrorAsync(careIdentityServiceValidationException);
 
             return careIdentityServiceValidationException;
+        }
+
+        // A 4xx tells us the dependency rejected what we sent it, which the caller can act on.
+        // A 5xx (or a transport failure, where StatusCode is null) is not the caller's to fix.
+        private static bool IsDependencyValidationStatusCode(HttpStatusCode? statusCode) =>
+            statusCode >= HttpStatusCode.BadRequest && statusCode < HttpStatusCode.InternalServerError;
+
+        private async ValueTask<CareIdentityServiceDependencyValidationException>
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
+        {
+            var careIdentityServiceDependencyValidationException =
+                new CareIdentityServiceDependencyValidationException(
+                    message: "Care identity service dependency validation error occurred, " +
+                        "fix the errors and try again.",
+
+                    innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(careIdentityServiceDependencyValidationException);
+
+            return careIdentityServiceDependencyValidationException;
         }
 
         private async ValueTask<CareIdentityServiceDependencyException> CreateAndLogDependencyExceptionAsync(

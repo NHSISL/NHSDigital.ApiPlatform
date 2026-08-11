@@ -27,11 +27,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
                 return await this.careIdentityServiceProcessingService.BuildLoginUrlAsync(cancellationToken);
             }
             catch (OperationCanceledException)
-                when (cancellationToken.IsCancellationRequested is false)
-            {
-                throw CreateCareIdentityServiceClientTimeoutDependencyException();
-            }
-            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -73,11 +68,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
                 await this.careIdentityServiceProcessingService.LogoutAsync(cancellationToken);
             }
             catch (OperationCanceledException)
-                when (cancellationToken.IsCancellationRequested is false)
-            {
-                throw CreateCareIdentityServiceClientTimeoutDependencyException();
-            }
-            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -117,11 +107,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             try
             {
                 return await this.careIdentityServiceProcessingService.GetAccessTokenAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-                when (cancellationToken.IsCancellationRequested is false)
-            {
-                throw CreateCareIdentityServiceClientTimeoutDependencyException();
             }
             catch (OperationCanceledException)
             {
@@ -168,11 +153,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
                 return await this.careIdentityServiceProcessingService.GetUserInfoAsync(code, state, cancellationToken);
             }
             catch (OperationCanceledException)
-                when (cancellationToken.IsCancellationRequested is false)
-            {
-                throw CreateCareIdentityServiceClientTimeoutDependencyException();
-            }
-            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -207,21 +187,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             }
         }
 
-        private static CareIdentityServiceClientDependencyException
-            CreateCareIdentityServiceClientTimeoutDependencyException()
-        {
-            var timeoutException =
-                new TimeoutException("The dependency operation timed out.");
-
-            var timeoutCareIdentityServiceClientException =
-                new TimeoutCareIdentityServiceClientException(
-                    message: "Failed care identity service client timeout error occurred, contact support.",
-                    innerException: timeoutException,
-                    data: timeoutException.Data);
-
-            return CreateCareIdentityServiceClientDependencyException(timeoutCareIdentityServiceClientException);
-        }
-
         private static CareIdentityServiceClientValidationException
             CreateCareIdentityServiceClientValidationException(Xeption innerException)
         {
@@ -234,7 +199,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             CreateCareIdentityServiceClientDependencyValidationException(Xeption innerException)
         {
             return new CareIdentityServiceClientDependencyValidationException(
-                message: "Care identity service client validation error occurred, fix errors and try again.",
+                message: "Care identity service client dependency validation error occurred, "
+                    + "fix errors and try again.",
                 innerException);
         }
 

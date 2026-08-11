@@ -46,6 +46,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             this.stateBroker = stateBroker;
             this.tokenBroker = tokenBroker;
         }
+
         public ValueTask<string> BuildLoginUrlAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {

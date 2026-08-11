@@ -50,7 +50,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
 
             if (!string.IsNullOrWhiteSpace(searchCriteria.NhsNumber))
             {
-                url = $"{baseUrl}/Patient/{searchCriteria.NhsNumber}";
+                url = $"{baseUrl}/Patient/{Uri.EscapeDataString(searchCriteria.NhsNumber)}";
             }
             else
             {

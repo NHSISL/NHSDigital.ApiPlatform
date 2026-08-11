@@ -33,11 +33,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
                     cancellationToken);
             }
             catch (OperationCanceledException)
-                when (cancellationToken.IsCancellationRequested is false)
-            {
-                throw CreatePersonalDemographicsServiceClientTimeoutDependencyException();
-            }
-            catch (OperationCanceledException)
             {
                 throw;
             }
@@ -72,22 +67,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
             }
         }
 
-        private static PersonalDemographicsServiceClientDependencyException
-            CreatePersonalDemographicsServiceClientTimeoutDependencyException()
-        {
-            var timeoutException =
-                new TimeoutException("The dependency operation timed out.");
-
-            var timeoutPersonalDemographicsServiceClientException =
-                new TimeoutPersonalDemographicsServiceClientException(
-                    message: "Failed personal demographics service client timeout error occurred, contact support.",
-                    innerException: timeoutException,
-                    data: timeoutException.Data);
-
-            return CreatePersonalDemographicsServiceClientDependencyException(
-                timeoutPersonalDemographicsServiceClientException);
-        }
-
         private static PersonalDemographicsServiceClientValidationException
             CreatePersonalDemographicsServiceClientValidationException(Xeption innerException)
         {
@@ -100,7 +79,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
             CreatePersonalDemographicsServiceClientDependencyValidationException(Xeption innerException)
         {
             return new PersonalDemographicsServiceClientDependencyValidationException(
-                message: "Personal demographics service client validation error occurred, fix errors and try again.",
+                message: "Personal demographics service client dependency validation error occurred, "
+                    + "fix errors and try again.",
                 innerException);
         }
 

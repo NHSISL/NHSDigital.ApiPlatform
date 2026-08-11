@@ -3,6 +3,7 @@
 // ---------------------------------------------------------
 
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,6 +68,16 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
                 throw await CreateAndLogDependencyExceptionAsync(timeoutPdsServiceException);
             }
             catch (HttpRequestException httpRequestException)
+                when (IsDependencyValidationStatusCode(httpRequestException.StatusCode))
+            {
+                var invalidPdsServiceDependencyException =
+                    new InvalidPdsServiceDependencyException(
+                        message: "Invalid PDS service dependency error occurred, fix the errors and try again.",
+                        innerException: httpRequestException);
+
+                throw await CreateAndLogDependencyValidationExceptionAsync(invalidPdsServiceDependencyException);
+            }
+            catch (HttpRequestException httpRequestException)
             {
                 var failedPdsServiceDependencyException =
                     new FailedPdsServiceDependencyException(
@@ -111,6 +122,23 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
             await this.loggingBroker.LogErrorAsync(pdsServiceValidationException);
 
             return pdsServiceValidationException;
+        }
+
+        // A 4xx tells us the dependency rejected what we sent it, which the caller can act on.
+        // A 5xx (or a transport failure, where StatusCode is null) is not the caller's to fix.
+        private static bool IsDependencyValidationStatusCode(HttpStatusCode? statusCode) =>
+            statusCode >= HttpStatusCode.BadRequest && statusCode < HttpStatusCode.InternalServerError;
+
+        private async ValueTask<PdsServiceDependencyValidationException>
+            CreateAndLogDependencyValidationExceptionAsync(Xeption exception)
+        {
+            var pdsServiceDependencyValidationException = new PdsServiceDependencyValidationException(
+                message: "PDS service dependency validation error occurred, fix the errors and try again.",
+                innerException: exception);
+
+            await this.loggingBroker.LogErrorAsync(pdsServiceDependencyValidationException);
+
+            return pdsServiceDependencyValidationException;
         }
 
         private async ValueTask<PdsServiceDependencyException> CreateAndLogDependencyExceptionAsync(
