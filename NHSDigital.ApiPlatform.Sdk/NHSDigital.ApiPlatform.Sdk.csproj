@@ -50,8 +50,9 @@
 
 	<ItemGroup>
 		<InternalsVisibleTo Include="NHSDigital.ApiPlatform.Sdk.AspNetCore" />
-		<InternalsVisibleTo Include="NHSDigital.ApiPlatform.Client.Tests.Unit" />
+		<InternalsVisibleTo Include="NHSDigital.ApiPlatform.Sdk.Tests.Unit" />
 		<InternalsVisibleTo Include="NHSDigital.ApiPlatform.Sdk.Tests.Acceptance" />
+		<InternalsVisibleTo Include="NHSDigital.ApiPlatform.Sdk.Tests.Integration" />
 		<InternalsVisibleTo Include="DynamicProxyGenAssembly2" />
 	</ItemGroup>
 
