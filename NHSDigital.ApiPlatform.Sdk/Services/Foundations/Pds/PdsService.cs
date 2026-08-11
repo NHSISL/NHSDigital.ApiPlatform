@@ -68,7 +68,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
 
                 if (!string.IsNullOrWhiteSpace(searchCriteria.DateOfBirth))
                 {
-                    url += $"&birthdate=eq{searchCriteria.DateOfBirth:yyyy-MM-dd}";
+                    url += $"&birthdate=eq{Uri.EscapeDataString(searchCriteria.DateOfBirth)}";
                 }
 
                 if (!string.IsNullOrWhiteSpace(searchCriteria.Postcode))

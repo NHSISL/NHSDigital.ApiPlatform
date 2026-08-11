@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -17,7 +17,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
     public partial class PdsServiceTests
     {
         [Fact]
-        public async Task ShouldThrowDependencyExceptionOnSearchPatientsIfOperationCanceledExceptionOccursAndLogItAsync()
+        public async Task ShouldThrowDependencyExceptionOnSearchPatientsIfOperationCanceledOccursAndLogItAsync()
         {
             // given
             string randomAccessToken = GetRandomString();

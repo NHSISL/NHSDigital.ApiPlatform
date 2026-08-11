@@ -10,7 +10,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Models.Clients.Pds.Exceptions
 {
     public class TimeoutPersonalDemographicsServiceClientException : Xeption
     {
-        public TimeoutPersonalDemographicsServiceClientException(string message, Exception innerException, IDictionary data)
+        public TimeoutPersonalDemographicsServiceClientException(
+            string message,
+            Exception innerException,
+            IDictionary data)
             : base(message, innerException, data)
         { }
     }

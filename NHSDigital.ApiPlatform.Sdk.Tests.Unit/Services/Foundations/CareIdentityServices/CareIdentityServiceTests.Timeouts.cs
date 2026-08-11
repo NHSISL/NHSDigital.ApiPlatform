@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -112,7 +112,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
         }
 
         [Fact]
-        public async Task ShouldThrowDependencyExceptionOnGetAccessTokenIfOperationCanceledExceptionOccursAndLogItAsync()
+        public async Task ShouldThrowDependencyExceptionOnGetAccessTokenIfOperationCanceledOccursAndLogItAsync()
         {
             // given
             var operationCanceledException = new OperationCanceledException();

@@ -16,7 +16,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
     public partial class PdsOrchestrationServiceTests
     {
         [Fact]
-        public async Task ShouldThrowDependencyExceptionOnSearchPatientsIfOperationCanceledExceptionOccursAndLogItAsync()
+        public async Task ShouldThrowDependencyExceptionOnSearchPatientsIfOperationCanceledOccursAndLogItAsync()
         {
             // given
             SearchCriteria randomSearchCriteria = CreateRandomSearchCriteria();

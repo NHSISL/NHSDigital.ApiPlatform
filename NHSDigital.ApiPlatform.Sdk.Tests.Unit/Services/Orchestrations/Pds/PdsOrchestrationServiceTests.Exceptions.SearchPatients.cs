@@ -18,7 +18,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
     {
         [Theory]
         [MemberData(nameof(DependencyValidationExceptions))]
-        public async Task ShouldThrowDependencyValidationExceptionOnSearchPatientsIfDependencyValidationErrorOccursAsync(
+        public async Task ShouldThrowDependencyValidationExceptionOnSearchPatientsIfValidationErrorOccursAsync(
             Xeption dependencyValidationException)
         {
             // given

@@ -23,13 +23,13 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.PersonalDemographicsServices
             this.pdsOrchestrationService = pdsOrchestrationService;
 
         public async ValueTask<string> SearchPatientsAsync(
-			SearchCriteria searchCriteria,
+            SearchCriteria searchCriteria,
             CancellationToken cancellationToken = default)
         {
             try
             {
                 return await this.pdsOrchestrationService.SearchPatientsAsync(
-					searchCriteria,
+                    searchCriteria,
                     cancellationToken);
             }
             catch (OperationCanceledException)
