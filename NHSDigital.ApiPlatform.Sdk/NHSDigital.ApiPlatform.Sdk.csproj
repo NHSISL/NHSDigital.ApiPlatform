@@ -19,7 +19,7 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>NHSISL; NHS Digital; API; Platform; SDK; Client; .NET; The Standard;</PackageTags>
 		<PackageReleaseNotes>
-			Initial release of the NHS Digital API Platform Client.
+			Updated package version to 0.2.0.3.
 		</PackageReleaseNotes>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 		<Version>0.2.0.3</Version>
