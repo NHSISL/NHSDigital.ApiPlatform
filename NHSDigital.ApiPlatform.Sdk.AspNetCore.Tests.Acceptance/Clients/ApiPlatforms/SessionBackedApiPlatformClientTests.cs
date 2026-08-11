@@ -72,6 +72,11 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Acceptance.Clients.ApiPlat
 
             services.AddApiPlatformSdkCore(this.apiPlatformConfigurations);
             services.AddApiPlatformSdkAspNetCore();
+
+            // Keep the dependency timeout short so the timeout path is observable in a test run.
+            services.AddHttpClient("NhsApiPlatform")
+                .ConfigureHttpClient(httpClient => httpClient.Timeout = TimeSpan.FromMilliseconds(500));
+
             this.serviceProvider = services.BuildServiceProvider();
             this.serviceScope = this.serviceProvider.CreateScope();
 
