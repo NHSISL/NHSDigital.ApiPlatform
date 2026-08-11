@@ -86,13 +86,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             ValidateOnCallback(code, state);
 
             string? expectedState = await this.stateBroker.GetCsrfStateAsync(cancellationToken);
-
-            if (string.IsNullOrWhiteSpace(expectedState) ||
-                string.Equals(state, expectedState, StringComparison.Ordinal) is false)
-            {
-                throw new InvalidOperationException("Invalid state parameter.");
-            }
-
+            ValidateStateMatches(state, expectedState);
             await this.stateBroker.ClearCsrfStateAsync(cancellationToken);
 
             TokenResult token = await ExchangeCodeForTokenAsync(code, cancellationToken);

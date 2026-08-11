@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -28,6 +28,26 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             catch (UnauthorisedCareIdentityServiceException unauthorisedCareIdentityServiceException)
             {
                 throw await CreateValidationExceptionAsync(unauthorisedCareIdentityServiceException);
+            }
+            catch (InvalidStateCareIdentityServiceException invalidStateCareIdentityServiceException)
+            {
+                throw await CreateValidationExceptionAsync(invalidStateCareIdentityServiceException);
+            }
+            catch (CareIdentityServiceValidationException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceDependencyValidationException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceDependencyException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceServiceException)
+            {
+                throw;
             }
             catch (OperationCanceledException)
             {
@@ -76,6 +96,26 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             catch (UnauthorisedCareIdentityServiceException unauthorisedCareIdentityServiceException)
             {
                 throw await CreateValidationExceptionAsync(unauthorisedCareIdentityServiceException);
+            }
+            catch (InvalidStateCareIdentityServiceException invalidStateCareIdentityServiceException)
+            {
+                throw await CreateValidationExceptionAsync(invalidStateCareIdentityServiceException);
+            }
+            catch (CareIdentityServiceValidationException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceDependencyValidationException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceDependencyException)
+            {
+                throw;
+            }
+            catch (CareIdentityServiceServiceException)
+            {
+                throw;
             }
             catch (OperationCanceledException)
             {
