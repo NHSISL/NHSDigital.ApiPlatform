@@ -80,27 +80,21 @@ namespace NHSDigital.ApiPlatform.Infrastructure.Services
                                 {
                                     Name = "Run Unit Tests",
                                     Shell = "pwsh",
-                                    Run =
-                                        """
-                                        $projects = Get-ChildItem -Path . -Filter "*Tests.Unit*.csproj" -Recurse
-                                        foreach ($project in $projects) {
-                                          Write-Host "Running tests for: $($project.FullName)"
-                                          dotnet test $project.FullName --no-build --verbosity normal
-                                        }
-                                        """
+                                    Run = CreateTestRunScript("*Tests.Unit*.csproj")
                                 },
 
                                 new TestTask
                                 {
                                     Name = "Run Acceptance Tests",
-                                    Run =
-                                        """
-                                        $projects = Get-ChildItem -Path . -Filter "*Tests.Acceptance*.csproj" -Recurse
-                                        foreach ($project in $projects) {
-                                          Write-Host "Running tests for: $($project.FullName)"
-                                          dotnet test $project.FullName --no-build --verbosity normal
-                                        }
-                                        """
+                                    Shell = "pwsh",
+                                    Run = CreateTestRunScript("*Tests.Acceptance*.csproj")
+                                },
+
+                                new TestTask
+                                {
+                                    Name = "Run Integration Tests",
+                                    Shell = "pwsh",
+                                    Run = CreateTestRunScript("*Tests.Integration*.csproj")
                                 }
                             }
                         }
@@ -197,5 +191,30 @@ namespace NHSDigital.ApiPlatform.Infrastructure.Services
                 adoPipeline: githubPipeline,
                 path: buildScriptPath);
         }
+
+        /// <summary>
+        /// Runs every test project matching <paramref name="projectFilter"/> and fails the step if ANY of
+        /// them failed. A bare loop reports only the last project's exit code, which silently hides a
+        /// failure in every project but the last. An empty match is also a failure — it means the glob has
+        /// drifted away from the projects it was meant to cover.
+        /// </summary>
+        private static string CreateTestRunScript(string projectFilter) =>
+            $$"""
+            $projects = Get-ChildItem -Path . -Filter "{{projectFilter}}" -Recurse
+            if ($projects.Count -eq 0) {
+              Write-Host "::error::No test projects matched {{projectFilter}}"
+              exit 1
+            }
+            $failedProjects = @()
+            foreach ($project in $projects) {
+              Write-Host "Running tests for: $($project.FullName)"
+              dotnet test $project.FullName --no-build --verbosity normal
+              if ($LASTEXITCODE -ne 0) { $failedProjects += $project.Name }
+            }
+            if ($failedProjects.Count -gt 0) {
+              Write-Host "::error::Test failures in: $($failedProjects -join ', ')"
+              exit 1
+            }
+            """;
     }
 }

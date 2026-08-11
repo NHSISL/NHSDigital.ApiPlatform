@@ -46,10 +46,10 @@ view you were on, and switching carries your current selection across.
 - Whatever is selected is outlined and lettered in **amber**; rows the traced
   path passes through carry a faint blue tint. Click the background or Reset
   to clear. Search finds components and methods. The **utility brokers**
-  toggle reveals the DateTime / Identifier broker copies that are hidden by
+  toggle reveals the DateTime / Identifier / Logging broker copies and the logging external that are hidden by
   default for readability.
 
-At the last scan, 27 declared components and 84 declared edges draw as
+At the last scan, 29 declared components and 86 declared edges draw as
 **25 components · 79 flows** in the single-copy view and **100 nodes ·
 413 flows** per consumer (29 · 86 and 115 · 443 with utility brokers on).
 
