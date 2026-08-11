@@ -128,6 +128,79 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
         }
 
         [Fact]
+        public async Task ShouldThrowValidationExceptionOnCallbackIfStateDoesNotMatchStoredStateAsync()
+        {
+            // given
+            string randomCode = GetRandomString();
+            string randomState = GetRandomString();
+            string differentState = GetRandomString();
+
+            var invalidStateCareIdentityServiceException =
+                new InvalidStateCareIdentityServiceException(
+                    message: "Invalid state parameter.");
+
+            var expectedCareIdentityServiceValidationException =
+                new CareIdentityServiceValidationException(
+                    message: "Care identity service validation error occurred, " +
+                        "please fix the errors and try again.",
+
+                    innerException: invalidStateCareIdentityServiceException);
+
+            this.stateBrokerMock.Setup(broker =>
+                broker.GetCsrfStateAsync(It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(differentState);
+
+            // when
+            ValueTask callbackTask = this.careIdentityService.CallbackAsync(randomCode, randomState);
+
+            CareIdentityServiceValidationException actualCareIdentityServiceValidationException =
+                await Assert.ThrowsAsync<CareIdentityServiceValidationException>(
+                    async () => await callbackTask);
+
+            // then
+            actualCareIdentityServiceValidationException
+                .Should().BeEquivalentTo(expectedCareIdentityServiceValidationException);
+
+            this.stateBrokerMock.Verify(broker =>
+                broker.ClearCsrfStateAsync(It.IsAny<CancellationToken>()),
+                    Times.Never);
+        }
+
+        [Fact]
+        public async Task ShouldThrowValidationExceptionOnCallbackIfNoStateWasStoredAsync()
+        {
+            // given
+            string randomCode = GetRandomString();
+            string randomState = GetRandomString();
+
+            var invalidStateCareIdentityServiceException =
+                new InvalidStateCareIdentityServiceException(
+                    message: "Invalid state parameter.");
+
+            var expectedCareIdentityServiceValidationException =
+                new CareIdentityServiceValidationException(
+                    message: "Care identity service validation error occurred, " +
+                        "please fix the errors and try again.",
+
+                    innerException: invalidStateCareIdentityServiceException);
+
+            this.stateBrokerMock.Setup(broker =>
+                broker.GetCsrfStateAsync(It.IsAny<CancellationToken>()))
+                    .ReturnsAsync((string)null);
+
+            // when
+            ValueTask callbackTask = this.careIdentityService.CallbackAsync(randomCode, randomState);
+
+            CareIdentityServiceValidationException actualCareIdentityServiceValidationException =
+                await Assert.ThrowsAsync<CareIdentityServiceValidationException>(
+                    async () => await callbackTask);
+
+            // then
+            actualCareIdentityServiceValidationException
+                .Should().BeEquivalentTo(expectedCareIdentityServiceValidationException);
+        }
+
+        [Fact]
         public async Task ShouldThrowValidationExceptionOnGetAccessTokenIfRefreshedTokenIsEmptyAsync()
         {
             // given

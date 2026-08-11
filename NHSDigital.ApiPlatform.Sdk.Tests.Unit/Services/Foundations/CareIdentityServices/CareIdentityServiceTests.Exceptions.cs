@@ -231,30 +231,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
                 .Should().BeEquivalentTo(expectedCareIdentityServiceServiceException);
         }
 
-        [Fact]
-        public async Task ShouldThrowServiceExceptionOnCallbackIfStateDoesNotMatchAsync()
-        {
-            // given
-            string randomCode = GetRandomString();
-            string randomState = GetRandomString();
-            string differentState = GetRandomString();
-
-            this.stateBrokerMock.Setup(broker =>
-                broker.GetCsrfStateAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(differentState);
-
-            // when
-            ValueTask callbackTask = this.careIdentityService.CallbackAsync(randomCode, randomState);
-
-            CareIdentityServiceServiceException actualCareIdentityServiceServiceException =
-                await Assert.ThrowsAsync<CareIdentityServiceServiceException>(
-                    async () => await callbackTask);
-
-            // then
-            actualCareIdentityServiceServiceException.InnerException.InnerException
-                .Should().BeOfType<InvalidOperationException>();
-        }
-
         private static CareIdentityServiceDependencyException CreateExpectedDependencyException(
             Exception dependencyException)
         {
