@@ -111,6 +111,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
                     cancellationToken);
             }
 
+            await this.tokenBroker.ClearActiveRoleAsync(cancellationToken);
+
             if (userInfo.NhsIdNrbacRoles.Count > 0)
             {
                 await this.tokenBroker.StoreActiveRoleAsync(
