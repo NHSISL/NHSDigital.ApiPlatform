@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -78,7 +78,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Clients.PersonalDemographicsServ
         private static SearchCriteria CreateRandomSearchCriteria() =>
             new SearchCriteria
             {
-                NhsNumber = GetRandomString()
+                NhsNumber = new IntRange(min: 1000000000, max: 1999999999).GetValue().ToString()
             };
 
         private static string GetRandomString() =>

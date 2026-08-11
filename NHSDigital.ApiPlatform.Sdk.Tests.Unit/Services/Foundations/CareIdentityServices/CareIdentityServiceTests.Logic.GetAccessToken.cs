@@ -223,5 +223,61 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.CareIdentit
                 broker.Deserialize<TokenResult>(randomTokenJson))
                     .Returns(refreshedTokenResult);
         }
+
+        [Fact]
+        public async Task ShouldStoreTheRotatedRefreshTokenOnGetAccessTokenAsync()
+        {
+            // given
+            // CIS2 rotates the refresh token on every refresh. If the SDK fails to store the new one,
+            // the next refresh presents a spent token and the user is silently signed out.
+            string randomRefreshToken = GetRandomString();
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            TokenResult randomTokenResult = CreateRandomTokenResult();
+
+            DateTimeOffset expectedRefreshExpiresAtUtc =
+                randomDateTimeOffset.AddSeconds(int.Parse(randomTokenResult.RefreshTokenExpiresIn));
+
+            SetupExpiredAccessTokenWithValidRefreshToken(
+                randomRefreshToken,
+                randomDateTimeOffset,
+                randomTokenResult);
+
+            // when
+            await this.careIdentityService.GetAccessTokenAsync();
+
+            // then
+            this.tokenBrokerMock.Verify(broker =>
+                broker.StoreRefreshTokenAsync(
+                    randomTokenResult.RefreshToken,
+                    expectedRefreshExpiresAtUtc,
+                    It.IsAny<CancellationToken>()),
+                        Times.Once);
+        }
+
+        [Fact]
+        public async Task ShouldNotStoreARefreshTokenOnGetAccessTokenIfTheRefreshDidNotReturnOneAsync()
+        {
+            // given
+            string randomRefreshToken = GetRandomString();
+            DateTimeOffset randomDateTimeOffset = GetRandomDateTimeOffset();
+            TokenResult randomTokenResult = CreateRandomTokenResult();
+            randomTokenResult.RefreshToken = string.Empty;
+
+            SetupExpiredAccessTokenWithValidRefreshToken(
+                randomRefreshToken,
+                randomDateTimeOffset,
+                randomTokenResult);
+
+            // when
+            await this.careIdentityService.GetAccessTokenAsync();
+
+            // then
+            this.tokenBrokerMock.Verify(broker =>
+                broker.StoreRefreshTokenAsync(
+                    It.IsAny<string>(),
+                    It.IsAny<DateTimeOffset>(),
+                    It.IsAny<CancellationToken>()),
+                        Times.Never);
+        }
     }
 }

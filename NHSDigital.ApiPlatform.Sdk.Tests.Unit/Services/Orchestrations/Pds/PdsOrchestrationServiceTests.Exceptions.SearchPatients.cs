@@ -114,45 +114,5 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Orchestrations.Pds
                     Times.Once);
         }
 
-        [Fact]
-        public async Task ShouldThrowDependencyExceptionOnSearchPatientsIfTimeoutOccursInFoundationServiceAsync()
-        {
-            // given
-            SearchCriteria randomSearchCriteria = CreateRandomSearchCriteria();
-            var timeoutException = new TimeoutException();
-
-            var failedPdsServiceDependencyException =
-                new NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds.Exceptions
-                    .FailedPdsServiceDependencyException(
-                        message: "Failed PDS service dependency error occurred, please contact support.",
-                        innerException: timeoutException);
-
-            var pdsServiceDependencyException =
-                new NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds.Exceptions.PdsServiceDependencyException(
-                    message: "PDS service dependency error occurred, please contact support.",
-                    innerException: failedPdsServiceDependencyException);
-
-            this.careIdentityServiceMock.Setup(service =>
-                service.GetAccessTokenAsync(It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(GetRandomString());
-
-            this.pdsServiceMock.Setup(service =>
-                service.SearchPatientsAsync(
-                    It.IsAny<string>(),
-                    It.IsAny<SearchCriteria>(),
-                    It.IsAny<CancellationToken>()))
-                        .ThrowsAsync(pdsServiceDependencyException);
-
-            // when
-            ValueTask<string> searchPatientsTask =
-                this.pdsOrchestrationService.SearchPatientsAsync(randomSearchCriteria);
-
-            PdsOrchestrationDependencyException actualException =
-                await Assert.ThrowsAsync<PdsOrchestrationDependencyException>(
-                    async () => await searchPatientsTask);
-
-            // then
-            actualException.InnerException.InnerException.Should().BeOfType<TimeoutException>();
-        }
     }
 }

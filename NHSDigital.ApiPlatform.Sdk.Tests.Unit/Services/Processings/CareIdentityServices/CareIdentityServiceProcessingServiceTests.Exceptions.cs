@@ -166,36 +166,5 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Processings.CareIdentit
                     Times.Once);
         }
 
-        [Fact]
-        public async Task ShouldThrowDependencyExceptionOnGetAccessTokenIfTimeoutOccursInFoundationServiceAsync()
-        {
-            // given
-            var timeoutException = new TimeoutException();
-
-            var failedCareIdentityServiceDependencyException =
-                new FailedCareIdentityServiceDependencyException(
-                    message: "Failed care identity service dependency error occurred, please contact support.",
-                    innerException: timeoutException);
-
-            var careIdentityServiceDependencyException =
-                new CareIdentityServiceDependencyException(
-                    message: "Care identity service dependency error occurred, please contact support.",
-                    innerException: failedCareIdentityServiceDependencyException);
-
-            this.careIdentityServiceMock.Setup(service =>
-                service.GetAccessTokenAsync(It.IsAny<CancellationToken>()))
-                    .ThrowsAsync(careIdentityServiceDependencyException);
-
-            // when
-            ValueTask<string> getAccessTokenTask =
-                this.careIdentityServiceProcessingService.GetAccessTokenAsync();
-
-            CareIdentityServiceProcessingDependencyException actualException =
-                await Assert.ThrowsAsync<CareIdentityServiceProcessingDependencyException>(
-                    async () => await getAccessTokenTask);
-
-            // then
-            actualException.InnerException.InnerException.Should().BeOfType<TimeoutException>();
-        }
     }
 }

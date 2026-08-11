@@ -79,7 +79,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
         private static SearchCriteria CreateRandomSearchCriteriaWithNhsNumber() =>
             new SearchCriteria
             {
-                NhsNumber = GetRandomString()
+                NhsNumber = GetRandomNhsNumber()
             };
 
         private static SearchCriteria CreateRandomSearchCriteriaWithDemographics() =>
@@ -94,6 +94,9 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Unit.Services.Foundations.Pds
 
         private static Expression<Func<Exception, bool>> SameExceptionAs(Xeption expectedException) =>
             actualException => (actualException as Xeption).SameExceptionAs(expectedException);
+
+        private static string GetRandomNhsNumber() =>
+            new IntRange(min: 1000000000, max: 1999999999).GetValue().ToString();
 
         private static string GetRandomString() =>
             new MnemonicString(wordCount: 1, wordMinLength: 8, wordMaxLength: 12).GetValue();
