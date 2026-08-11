@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -37,7 +37,10 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Integration
         public void ShouldOverrideTheInMemoryStorageBrokersWithSessionBackedOnes()
         {
             // given
-            ServiceProvider serviceProvider = BuildServiceProvider();
+            // AddApiPlatformSdkInMemoryStorage uses TryAdd, so the session brokers only win if
+            // AddApiPlatformSdkAspNetCore has already registered them. Registering the in-memory
+            // ones here is what makes this assertion capable of failing.
+            ServiceProvider serviceProvider = BuildServiceProvider(withInMemoryStorage: true);
             using IServiceScope serviceScope = serviceProvider.CreateScope();
 
             // when
@@ -50,6 +53,38 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Integration
             // then
             actualStateBroker.GetType().Name.Should().Be("SessionApiPlatformStateBroker");
             actualTokenBroker.GetType().Name.Should().Be("SessionApiPlatformTokenBroker");
+        }
+
+        [Fact]
+        public void ShouldStillUseTheSessionBrokersWhenInMemoryStorageIsRegisteredFirst()
+        {
+            // given
+            // Registration order does NOT matter here, contrary to what one might expect from
+            // TryAdd: AddApiPlatformSdkAspNetCore uses AddScoped, which appends rather than
+            // no-ops, and the last registration for a service is the one that resolves. So the
+            // session brokers win either way, and a web host cannot accidentally end up on the
+            // process-wide singletons by ordering these two calls the "wrong" way round.
+            ApiPlatformConfigurations configurations =
+                ConfigurationProvider.GetApiPlatformConfigurations();
+
+            IServiceCollection services = new ServiceCollection();
+
+            services.AddSingleton<IHttpContextAccessor>(
+                new HttpContextAccessor { HttpContext = CreateHttpContext() });
+
+            services.AddApiPlatformSdkCore(configurations);
+            services.AddApiPlatformSdkInMemoryStorage();
+            services.AddApiPlatformSdkAspNetCore();
+
+            using ServiceProvider serviceProvider = services.BuildServiceProvider();
+            using IServiceScope serviceScope = serviceProvider.CreateScope();
+
+            // when
+            var actualStateBroker =
+                serviceScope.ServiceProvider.GetRequiredService<IApiPlatformStateBroker>();
+
+            // then
+            actualStateBroker.GetType().Name.Should().Be("SessionApiPlatformStateBroker");
         }
 
         [Fact]
@@ -93,23 +128,29 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Tests.Integration
             actualToken.Should().Be(randomAccessToken);
         }
 
-        private static ServiceProvider BuildServiceProvider()
-        {
-            ApiPlatformConfigurations configurations =
-                ConfigurationProvider.GetApiPlatformConfigurations();
-
-            var httpContext = new DefaultHttpContext
+        private static DefaultHttpContext CreateHttpContext() =>
+            new DefaultHttpContext
             {
                 Session = new IntegrationSession()
             };
 
+        private static ServiceProvider BuildServiceProvider(bool withInMemoryStorage = false)
+        {
+            ApiPlatformConfigurations configurations =
+                ConfigurationProvider.GetApiPlatformConfigurations();
+
             IServiceCollection services = new ServiceCollection();
 
             services.AddSingleton<IHttpContextAccessor>(
-                new HttpContextAccessor { HttpContext = httpContext });
+                new HttpContextAccessor { HttpContext = CreateHttpContext() });
 
             services.AddApiPlatformSdkCore(configurations);
             services.AddApiPlatformSdkAspNetCore();
+
+            if (withInMemoryStorage)
+            {
+                services.AddApiPlatformSdkInMemoryStorage();
+            }
 
             return services.BuildServiceProvider();
         }

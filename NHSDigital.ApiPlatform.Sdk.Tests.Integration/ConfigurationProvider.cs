@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -17,8 +17,9 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Integration
     ///     ApiPlatform__CareIdentity__ClientId
     ///     ApiPlatform__CareIdentity__ClientSecret
     ///
-    /// Tests that require a live NHS API Platform conversation check
-    /// <see cref="HasCredentials"/> and are skipped when credentials are absent.
+    /// Tests that require a live NHS API Platform conversation are marked with an explicit
+    /// [Fact(Skip = "...")] rather than being silently skipped on missing configuration, so that a
+    /// run without credentials reports them as skipped instead of passing vacuously.
     /// </summary>
     internal static class ConfigurationProvider
     {
@@ -33,14 +34,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Tests.Integration
             return configuration
                 .GetSection("ApiPlatform")
                 .Get<ApiPlatformConfigurations>() ?? new ApiPlatformConfigurations();
-        }
-
-        internal static bool HasCredentials()
-        {
-            ApiPlatformConfigurations configurations = GetApiPlatformConfigurations();
-
-            return string.IsNullOrWhiteSpace(configurations.CareIdentity.ClientId) is false &&
-                string.IsNullOrWhiteSpace(configurations.CareIdentity.ClientSecret) is false;
         }
     }
 }
