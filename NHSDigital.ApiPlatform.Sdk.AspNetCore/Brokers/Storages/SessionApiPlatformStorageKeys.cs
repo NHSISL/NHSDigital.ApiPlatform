@@ -11,5 +11,6 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Brokers.Storages
         internal const string AccessTokenExpiresAtUtc = "Nhs.ApiPlatform.AccessToken.ExpiresAtUtc";
         internal const string RefreshToken = "Nhs.ApiPlatform.RefreshToken";
         internal const string RefreshTokenExpiresAtUtc = "Nhs.ApiPlatform.RefreshToken.ExpiresAtUtc";
+        internal const string ActiveRoleId = "Nhs.ApiPlatform.ActiveRoleId";
     }
 }

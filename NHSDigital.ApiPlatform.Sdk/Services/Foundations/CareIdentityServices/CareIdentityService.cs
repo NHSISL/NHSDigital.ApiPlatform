@@ -71,6 +71,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             await this.stateBroker.ClearCsrfStateAsync(cancellationToken);
             await this.tokenBroker.ClearAccessTokenAsync(cancellationToken);
             await this.tokenBroker.ClearRefreshTokenAsync(cancellationToken);
+            await this.tokenBroker.ClearActiveRoleAsync(cancellationToken);
         });
 
         public ValueTask CallbackAsync(
@@ -92,7 +93,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             await this.stateBroker.ClearCsrfStateAsync(cancellationToken);
 
             TokenResult token = await ExchangeCodeForTokenAsync(code, cancellationToken);
-            _ = await GetUserInfoAsync(token.AccessToken, cancellationToken);
+            NhsUserInfo userInfo = await GetUserInfoAsync(token.AccessToken, cancellationToken);
             _ = int.TryParse(token.ExpiresIn, out int accessExpiresInSeconds);
             _ = int.TryParse(token.RefreshTokenExpiresIn, out int refreshExpiresInSeconds);
 
@@ -107,6 +108,15 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
                 await this.tokenBroker.StoreRefreshTokenAsync(
                     token.RefreshToken,
                     refreshExpiresAtUtc,
+                    cancellationToken);
+            }
+
+            await this.tokenBroker.ClearActiveRoleAsync(cancellationToken);
+
+            if (userInfo.NhsIdNrbacRoles.Count > 0)
+            {
+                await this.tokenBroker.StoreActiveRoleAsync(
+                    userInfo.NhsIdNrbacRoles[0].PersonRoleId,
                     cancellationToken);
             }
         });

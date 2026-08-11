@@ -17,6 +17,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Brokers.Storages
         private string? refreshToken;
         private DateTimeOffset? refreshExpiresAtUtc;
 
+        private string? activeRoleId;
+
         public ValueTask StoreAccessTokenAsync(
             string accessToken,
             DateTimeOffset expiresAtUtc,
@@ -80,6 +82,36 @@ namespace NHSDigital.ApiPlatform.Sdk.Brokers.Storages
             {
                 this.refreshToken = null;
                 this.refreshExpiresAtUtc = null;
+            }
+
+            return ValueTask.CompletedTask;
+        }
+
+        public ValueTask StoreActiveRoleAsync(
+            string roleId,
+            CancellationToken cancellationToken = default)
+        {
+            lock (this.locker)
+            {
+                this.activeRoleId = roleId;
+            }
+
+            return ValueTask.CompletedTask;
+        }
+
+        public ValueTask<string?> GetActiveRoleAsync(CancellationToken cancellationToken = default)
+        {
+            lock (this.locker)
+            {
+                return ValueTask.FromResult(this.activeRoleId);
+            }
+        }
+
+        public ValueTask ClearActiveRoleAsync(CancellationToken cancellationToken = default)
+        {
+            lock (this.locker)
+            {
+                this.activeRoleId = null;
             }
 
             return ValueTask.CompletedTask;

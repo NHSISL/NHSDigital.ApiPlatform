@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Https;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Identifiers;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Storages;
 using NHSDigital.ApiPlatform.Sdk.Models.Configurations;
 using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds;
 
@@ -18,15 +19,18 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
         private readonly ApiPlatformConfigurations configurations;
         private readonly IHttpBroker httpBroker;
         private readonly IIdentifierBroker identifierBroker;
+        private readonly IApiPlatformTokenBroker tokenBroker;
 
         public PdsService(
             ApiPlatformConfigurations configurations,
             IHttpBroker httpBroker,
-            IIdentifierBroker identifierBroker)
+            IIdentifierBroker identifierBroker,
+            IApiPlatformTokenBroker tokenBroker)
         {
             this.configurations = configurations;
             this.httpBroker = httpBroker;
             this.identifierBroker = identifierBroker;
+            this.tokenBroker = tokenBroker;
         }
 
 		public ValueTask<string> SearchPatientsAsync(
@@ -67,6 +71,8 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
 				}
 			}
 
+			string? activeRoleId = await this.tokenBroker.GetActiveRoleAsync(cancellationToken);
+
 			var response = await this.httpBroker.GetAsync(
 				url,
 				request =>
@@ -74,6 +80,11 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.Pds
 					request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 					request.Headers.Add("X-Request-ID", this.identifierBroker.GetNewGuid().ToString());
 					request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/fhir+json"));
+
+					if (!string.IsNullOrWhiteSpace(activeRoleId))
+					{
+						request.Headers.Add("NHSD-Session-URID", activeRoleId);
+					}
 				},
 				cancellationToken);
 

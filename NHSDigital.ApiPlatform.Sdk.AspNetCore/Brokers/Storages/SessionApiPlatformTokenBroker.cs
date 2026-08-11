@@ -90,6 +90,31 @@ namespace NHSDigital.ApiPlatform.Sdk.AspNetCore.Brokers.Storages
             return ValueTask.CompletedTask;
         }
 
+        public ValueTask StoreActiveRoleAsync(
+            string roleId,
+            CancellationToken cancellationToken = default)
+        {
+            ISession session = GetSessionOrThrow();
+            session.SetString(SessionApiPlatformStorageKeys.ActiveRoleId, roleId);
+
+            return ValueTask.CompletedTask;
+        }
+
+        public ValueTask<string?> GetActiveRoleAsync(CancellationToken cancellationToken = default)
+        {
+            ISession session = GetSessionOrThrow();
+
+            return ValueTask.FromResult(session.GetString(SessionApiPlatformStorageKeys.ActiveRoleId));
+        }
+
+        public ValueTask ClearActiveRoleAsync(CancellationToken cancellationToken = default)
+        {
+            ISession session = GetSessionOrThrow();
+            session.Remove(SessionApiPlatformStorageKeys.ActiveRoleId);
+
+            return ValueTask.CompletedTask;
+        }
+
         private static DateTimeOffset? ReadExpiresAtUtc(ISession session, string expiresKey)
         {
             string? expiresAt = session.GetString(expiresKey);
