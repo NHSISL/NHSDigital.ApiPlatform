@@ -1,0 +1,23 @@
+# NHS Digital API Platform (remote) — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-nhs
+components:
+  - id: EXT.Cis2
+    name: NHS CIS2 (Care Identity Service)
+    layer: external
+    col: 8
+    shared: true
+    deriveMethods: true
+    description: "OAuth2 authorization-code flow without PKCE — CIS2 does not support it. Auth, token and userinfo endpoints come from CareIdentityConfigurations."
+    methods: []
+  - id: EXT.Pds
+    name: NHS Personal Demographics Service
+    layer: external
+    col: 8
+    shared: true
+    deriveMethods: true
+    description: "FHIR Patient search / retrieve. Requests carry a bearer token, a per-request X-Request-ID and an application/fhir+json Accept header."
+    methods: []

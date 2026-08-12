@@ -1,0 +1,86 @@
+# NHS Digital API Platform — dependency graph manifest
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+#
+# Column map (components' col in the project files):
+#   0 SDK entry point        1 clients
+#   2 processings            3 orchestrations
+#   4 foundations            5 SDK brokers
+#   6 in-memory broker implementations (Sdk)
+#   7 session broker implementations (Sdk.AspNetCore)
+#   8 far externals
+# `projects` order controls layout bands; `roots` order controls the
+# per-consumer view's tree order. A component flagged shared in its
+# project file must appear in roots or its inbound edges are dropped.
+
+solution: NHS Digital API Platform
+eventBroker: null
+projects:
+  - id: sdk
+    name: NHSDigital.ApiPlatform.Sdk
+    kind: internal
+    file: projects/nhsdigital-apiplatform-sdk.yml
+  - id: sdk-aspnetcore
+    name: NHSDigital.ApiPlatform.Sdk.AspNetCore
+    kind: internal
+    file: projects/nhsdigital-apiplatform-sdk-aspnetcore.yml
+  - id: infrastructure
+    name: NHSDigital.ApiPlatform.Infrastructure
+    kind: internal
+    file: projects/nhsdigital-apiplatform-infrastructure.yml
+  - id: ext-http
+    name: Microsoft.Extensions.Http
+    kind: external
+    file: projects/microsoft-extensions-http.yml
+  - id: ext-aspnetcore
+    name: ASP.NET Core
+    kind: external
+    file: projects/asp-net-core.yml
+  - id: ext-bcl
+    name: ".NET base class library"
+    kind: external
+    file: projects/net-base-class-library.yml
+  - id: ext-adotnet
+    name: ADotNet
+    kind: external
+    file: projects/adotnet.yml
+  - id: ext-logging
+    name: Microsoft.Extensions.Logging
+    kind: external
+    file: projects/microsoft-extensions-logging.yml
+  - id: ext-nhs
+    name: NHS Digital API Platform (remote)
+    kind: external
+    file: projects/nhs-digital-api-platform-remote.yml
+roots:
+  - ApiPlatformClient
+  - ApiPlatformClientFacade
+  - CIS.Client
+  - PDS.Client
+  - CIS.Processing
+  - PDS.Orchestration
+  - CIS.Foundation
+  - PDS.Foundation
+  - HttpBroker
+  - CryptoBroker
+  - JsonBroker
+  - DateTimeBroker
+  - IdentifierBroker
+  - LoggingBroker
+  - StateBroker
+  - TokenBroker
+  - MemoryStateBroker
+  - MemoryTokenBroker
+  - SessionStateBroker
+  - SessionTokenBroker
+  - INF.Program
+  - INF.ScriptGeneration
+  - EXT.HttpClientFactory
+  - EXT.Session
+  - EXT.Bcl
+  - EXT.Logging
+  - EXT.Cis2
+  - EXT.Pds
+  - EXT.ADotNet
+events: []

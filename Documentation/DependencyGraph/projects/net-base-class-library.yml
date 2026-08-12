@@ -1,0 +1,15 @@
+# .NET base class library — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-bcl
+components:
+  - id: EXT.Bcl
+    name: System.Security.Cryptography / Text.Json
+    layer: external
+    col: 8
+    shared: true
+    deriveMethods: true
+    description: "RandomNumberGenerator for the CSRF state, System.Text.Json (Web defaults) for payloads, Guid.NewGuid for the PDS X-Request-ID, DateTimeOffset.UtcNow for token expiry."
+    methods: []

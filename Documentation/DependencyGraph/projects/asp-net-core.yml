@@ -1,0 +1,15 @@
+# ASP.NET Core — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-aspnetcore
+components:
+  - id: EXT.Session
+    name: ISession / IHttpContextAccessor
+    layer: external
+    col: 8
+    shared: true
+    deriveMethods: true
+    description: "ASP.NET Core session state. The Sdk.AspNetCore brokers throw when there is no HttpContext or session — the host must have called UseSession()."
+    methods: []
