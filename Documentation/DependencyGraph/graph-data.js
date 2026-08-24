@@ -35,6 +35,7 @@
     { id: "ext-aspnetcore", name: "ASP.NET Core", kind: "external" },
     { id: "ext-bcl", name: ".NET base class library", kind: "external" },
     { id: "ext-adotnet", name: "ADotNet", kind: "external" },
+    { id: "ext-logging", name: "Microsoft.Extensions.Logging", kind: "external" },
     { id: "ext-nhs", name: "NHS Digital API Platform (remote)", kind: "external" },
   ];
 
@@ -69,6 +70,9 @@
       description: "ASP.NET Core session state. The Sdk.AspNetCore brokers throw when there is no HttpContext or session — the host must have called UseSession()." });
   C({ id: "EXT.Bcl", name: "System.Security.Cryptography / Text.Json", project: "ext-bcl", layer: "external", col: 8, shared: true, methods: [],
       description: "RandomNumberGenerator for the CSRF state, System.Text.Json (Web defaults) for payloads, Guid.NewGuid for the PDS X-Request-ID, DateTimeOffset.UtcNow for token expiry." });
+  C({ id: "EXT.Logging", name: "Microsoft.Extensions.Logging", project: "ext-logging", layer: "external", col: 8,
+      shared: true, utility: true, methods: [],
+      description: "AddApiPlatformSdkCore calls AddLogging(), so a host that configures no providers still resolves an ILoggerFactory and the SDK's error logging goes nowhere rather than failing." });
   C({ id: "EXT.Cis2", name: "NHS CIS2 (Care Identity Service)", project: "ext-nhs", layer: "external", col: 8, shared: true, methods: [],
       description: "OAuth2 authorization-code flow without PKCE — CIS2 does not support it. Auth, token and userinfo endpoints come from CareIdentityConfigurations." });
   C({ id: "EXT.Pds", name: "NHS Personal Demographics Service", project: "ext-nhs", layer: "external", col: 8, shared: true, methods: [],
@@ -121,7 +125,7 @@
      ================================================================== */
   C({ id: "PDS.Orchestration", name: "PdsOrchestrationService", project: "sdk", layer: "orchestration", col: 3,
       methods: ["SearchPatientsAsync"],
-      description: "Gets a CIS2 access token, refuses the call with UnauthorizedPdsOrchestrationException when it comes back empty, then hands it to PdsService. NOTE: it also takes IApiPlatformTokenBroker in its constructor but never calls it — the token comes from CareIdentityService." });
+      description: "Validates the search criteria, gets a CIS2 access token, refuses the call with UnauthorizedPdsOrchestrationException when it comes back empty, then hands it to PdsService." });
   D(["PDS.Orchestration", "SearchPatientsAsync"], ["CIS.Foundation", "GetAccessTokenAsync"]);
   D(["PDS.Orchestration", "SearchPatientsAsync"], ["PDS.Foundation", "SearchPatientsAsync"]);
 
@@ -196,6 +200,12 @@
       methods: ["GetNewGuid"] });
   D(["IdentifierBroker", "GetNewGuid"], ["EXT.Bcl", "Guid.NewGuid"]);
 
+  C({ id: "LoggingBroker", name: "LoggingBroker", project: "sdk", layer: "broker", col: 5, utility: true,
+      methods: ["LogErrorAsync", "LogCriticalAsync"],
+      description: "Wraps ILogger<LoggingBroker>. Every service takes it, but it is only ever reached from the CreateAndLog* exception factories — which this graph deliberately does not draw — so it has no inbound flows here. Registered with TryAddSingleton so a host can substitute its own." });
+  D(["LoggingBroker", "LogErrorAsync"], ["EXT.Logging", "ILogger.LogError"]);
+  D(["LoggingBroker", "LogCriticalAsync"], ["EXT.Logging", "ILogger.LogCritical"]);
+
   /* -- the two swappable storage brokers -------------------------------
      Both interfaces have an in-memory implementation shipped in the Sdk
      and a session-backed one in Sdk.AspNetCore. Which one you get is a
@@ -262,14 +272,14 @@
     "CIS.Client", "PDS.Client",
     "CIS.Processing", "PDS.Orchestration",
     "CIS.Foundation", "PDS.Foundation",
-    "HttpBroker", "CryptoBroker", "JsonBroker", "DateTimeBroker", "IdentifierBroker",
+    "HttpBroker", "CryptoBroker", "JsonBroker", "DateTimeBroker", "IdentifierBroker", "LoggingBroker",
     "StateBroker", "TokenBroker", "MemoryStateBroker", "MemoryTokenBroker",
     // NHSDigital.ApiPlatform.Sdk.AspNetCore
     "SessionStateBroker", "SessionTokenBroker",
     // NHSDigital.ApiPlatform.Infrastructure
     "INF.Program", "INF.ScriptGeneration",
     // externals
-    "EXT.HttpClientFactory", "EXT.Session", "EXT.Bcl", "EXT.Cis2", "EXT.Pds", "EXT.ADotNet",
+    "EXT.HttpClientFactory", "EXT.Session", "EXT.Bcl", "EXT.Logging", "EXT.Cis2", "EXT.Pds", "EXT.ADotNet",
   );
 
   /* ------------------------------------------------------------------
@@ -277,7 +287,7 @@
      Derive their method rows from the declared edges so the rows and
      the arrows can never drift apart.
      ------------------------------------------------------------------ */
-  for (const extId of ["EXT.HttpClientFactory", "EXT.Session", "EXT.Bcl", "EXT.Cis2", "EXT.Pds", "EXT.ADotNet"]) {
+  for (const extId of ["EXT.HttpClientFactory", "EXT.Session", "EXT.Bcl", "EXT.Logging", "EXT.Cis2", "EXT.Pds", "EXT.ADotNet"]) {
     const comp = components.find(c => c.id === extId);
     const called = [];
     for (const e of edges) {

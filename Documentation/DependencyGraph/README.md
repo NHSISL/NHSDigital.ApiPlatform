@@ -46,12 +46,12 @@ view you were on, and switching carries your current selection across.
 - Whatever is selected is outlined and lettered in **amber**; rows the traced
   path passes through carry a faint blue tint. Click the background or Reset
   to clear. Search finds components and methods. The **utility brokers**
-  toggle reveals the DateTime / Identifier broker copies that are hidden by
+  toggle reveals the DateTime / Identifier / Logging broker copies and the logging external that are hidden by
   default for readability.
 
-At the last scan, 27 declared components and 84 declared edges draw as
+At the last scan, 29 declared components and 86 declared edges draw as
 **25 components · 79 flows** in the single-copy view and **100 nodes ·
-413 flows** per consumer (27 · 84 and 113 · 441 with utility brokers on).
+413 flows** per consumer (29 · 86 and 115 · 443 with utility brokers on).
 
 `.github/workflows/pages.yml` publishes this folder to GitHub Pages on every
 push to `main` that touches it — `index.html` is the site root. Nothing is
@@ -71,9 +71,15 @@ enabled once in the repository's Settings → Pages (source: GitHub Actions).
   `IApiPlatformClient` holding the same two sub-clients, but nothing
   constructs or registers it: `AddApiPlatformSdkCore` registers a hand-built
   `ApiPlatformClient` instead. It shows on the graph with no inbound flows.
-- **`PdsOrchestrationService` takes `IApiPlatformTokenBroker` and never uses
-  it.** The access token comes from `CareIdentityService.GetAccessTokenAsync`;
-  the injected broker is unused.
+- **`LoggingBroker` has no inbound flows on this graph, by design.** Every
+  service takes `ILoggingBroker`, but it is only ever reached from the
+  `CreateAndLog*` exception factories, and this graph draws happy-path calls
+  only. It is a utility broker, so it is hidden behind the toggle along with
+  the DateTime and Identifier brokers.
+- **Dependency failures are categorised by HTTP status.** Both foundation
+  services split `HttpRequestException`: a 4xx becomes a
+  `*DependencyValidationException` (the caller sent something the dependency
+  rejected), a 5xx or a transport failure becomes a `*DependencyException`.
 - **The storage brokers are the extension seam.** `IApiPlatformStateBroker`
   and `IApiPlatformTokenBroker` each have an in-memory implementation in the
   Sdk and a session-backed one in Sdk.AspNetCore. Both are registered with

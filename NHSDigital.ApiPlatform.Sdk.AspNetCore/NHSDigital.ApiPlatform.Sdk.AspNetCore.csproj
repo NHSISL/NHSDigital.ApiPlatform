@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
@@ -20,12 +20,13 @@
 		<RepositoryType>git</RepositoryType>
 		<PackageTags>NHSISL; NHS Digital; API; Platform; Client; .NET; The Standard;</PackageTags>
 		<PackageReleaseNotes>
-			Release 0.2.0.3: updated NHSDigital.ApiPlatform.Sdk.AspNetCore package metadata.
+			Release 0.3.0.0: tracks the NHSDigital.ApiPlatform.Sdk 0.3.0.0 exception and
+			cancellation contract changes.
 		</PackageReleaseNotes>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-		<Version>0.2.0.3</Version>
-		<AssemblyVersion>0.2.0.3</AssemblyVersion>
-		<FileVersion>0.2.0.3</FileVersion>
+		<Version>0.3.0.0</Version>
+		<AssemblyVersion>0.3.0.0</AssemblyVersion>
+		<FileVersion>0.3.0.0</FileVersion>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageLicenseFile>LICENSE.txt</PackageLicenseFile>
 		<IsPackable>true</IsPackable>

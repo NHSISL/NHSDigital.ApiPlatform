@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 
@@ -26,6 +26,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 return await this.careIdentityServiceProcessingService.BuildLoginUrlAsync(cancellationToken);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (CareIdentityServiceProcessingValidationException careIdentityServiceProcessingValidationException)
             {
                 throw CreateCareIdentityServiceClientValidationException(
@@ -34,7 +38,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             catch (CareIdentityServiceProcessingDependencyValidationException
                 careIdentityServiceProcessingDependencyValidationException)
             {
-                throw CreateCareIdentityServiceClientValidationException(
+                throw CreateCareIdentityServiceClientDependencyValidationException(
                     careIdentityServiceProcessingDependencyValidationException.InnerException as Xeption);
             }
             catch (CareIdentityServiceProcessingDependencyException careIdentityServiceProcessingDependencyException)
@@ -63,6 +67,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 await this.careIdentityServiceProcessingService.LogoutAsync(cancellationToken);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (CareIdentityServiceProcessingValidationException careIdentityServiceProcessingValidationException)
             {
                 throw CreateCareIdentityServiceClientValidationException(
@@ -71,7 +79,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             catch (CareIdentityServiceProcessingDependencyValidationException
                 careIdentityServiceProcessingDependencyValidationException)
             {
-                throw CreateCareIdentityServiceClientValidationException(
+                throw CreateCareIdentityServiceClientDependencyValidationException(
                     careIdentityServiceProcessingDependencyValidationException.InnerException as Xeption);
             }
             catch (CareIdentityServiceProcessingDependencyException careIdentityServiceProcessingDependencyException)
@@ -100,6 +108,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 return await this.careIdentityServiceProcessingService.GetAccessTokenAsync(cancellationToken);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (CareIdentityServiceProcessingValidationException careIdentityServiceProcessingValidationException)
             {
                 throw CreateCareIdentityServiceClientValidationException(
@@ -108,7 +120,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             catch (CareIdentityServiceProcessingDependencyValidationException
                 careIdentityServiceProcessingDependencyValidationException)
             {
-                throw CreateCareIdentityServiceClientValidationException(
+                throw CreateCareIdentityServiceClientDependencyValidationException(
                     careIdentityServiceProcessingDependencyValidationException.InnerException as Xeption);
             }
             catch (CareIdentityServiceProcessingDependencyException careIdentityServiceProcessingDependencyException)
@@ -120,6 +132,14 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 throw CreateCareIdentityServiceClientServiceException(
                     careIdentityServiceProcessingServiceException.InnerException as Xeption);
+            }
+            catch (Exception exception)
+            {
+                throw CreateCareIdentityServiceClientServiceException(
+                    new FailedCareIdentityServiceClientException(
+                        message: "Unexpected error occurred, contact support.",
+                        innerException: exception,
+                        data: exception.Data));
             }
         }
 
@@ -132,6 +152,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             {
                 return await this.careIdentityServiceProcessingService.GetUserInfoAsync(code, state, cancellationToken);
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
             catch (CareIdentityServiceProcessingValidationException careIdentityServiceProcessingValidationException)
             {
                 throw CreateCareIdentityServiceClientValidationException(
@@ -140,7 +164,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
             catch (CareIdentityServiceProcessingDependencyValidationException
                 careIdentityServiceProcessingDependencyValidationException)
             {
-                throw CreateCareIdentityServiceClientValidationException(
+                throw CreateCareIdentityServiceClientDependencyValidationException(
                     careIdentityServiceProcessingDependencyValidationException.InnerException as Xeption);
             }
             catch (CareIdentityServiceProcessingDependencyException careIdentityServiceProcessingDependencyException)
@@ -153,6 +177,14 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
                 throw CreateCareIdentityServiceClientServiceException(
                     careIdentityServiceProcessingServiceException.InnerException as Xeption);
             }
+            catch (Exception exception)
+            {
+                throw CreateCareIdentityServiceClientServiceException(
+                    new FailedCareIdentityServiceClientException(
+                        message: "Unexpected error occurred, contact support.",
+                        innerException: exception,
+                        data: exception.Data));
+            }
         }
 
         private static CareIdentityServiceClientValidationException
@@ -160,6 +192,15 @@ namespace NHSDigital.ApiPlatform.Sdk.Clients.CareIdentityServices
         {
             return new CareIdentityServiceClientValidationException(
                 message: "Care identity service client validation error occurred, fix errors and try again.",
+                innerException);
+        }
+
+        private static CareIdentityServiceClientDependencyValidationException
+            CreateCareIdentityServiceClientDependencyValidationException(Xeption innerException)
+        {
+            return new CareIdentityServiceClientDependencyValidationException(
+                message: "Care identity service client dependency validation error occurred, "
+                    + "fix errors and try again.",
                 innerException);
         }
 
