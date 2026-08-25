@@ -1,0 +1,36 @@
+# NHSDigital.ApiPlatform.Infrastructure — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: infrastructure
+components:
+  - id: INF.Program
+    name: Program
+    layer: exposer
+    col: 0
+    description: "Console entry point. Running this project rewrites .github/workflows/build.yml and prLinter.yml — they are generated artifacts, not hand-edited files. (pages.yml is the exception: it is hand-authored, because the Pages actions are outside ADotNet 4.1.0's task model.)"
+    methods:
+      - Main
+    calls:
+      - from: Main
+        to: INF.ScriptGeneration
+        method: GenerateBuildScript
+      - from: Main
+        to: INF.ScriptGeneration
+        method: GeneratePrLintScript
+  - id: INF.ScriptGeneration
+    name: ScriptGenerationService
+    layer: foundation
+    col: 4
+    description: "Builds a GithubPipeline object graph — build on push/PR to main against .NET 10, and the PR linter's label + issue-association jobs — and serialises it with ADotNet."
+    methods:
+      - GenerateBuildScript
+      - GeneratePrLintScript
+    calls:
+      - from: GenerateBuildScript
+        to: EXT.ADotNet
+        method: SerializeAndWriteToFile
+      - from: GeneratePrLintScript
+        to: EXT.ADotNet
+        method: SerializeAndWriteToFile

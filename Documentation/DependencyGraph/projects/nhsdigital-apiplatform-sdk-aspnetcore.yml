@@ -1,0 +1,63 @@
+# NHSDigital.ApiPlatform.Sdk.AspNetCore — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: sdk-aspnetcore
+components:
+  - id: SessionStateBroker
+    name: SessionApiPlatformStateBroker
+    layer: broker
+    col: 7
+    description: "Reads and writes ASP.NET Core session state via IHttpContextAccessor, scoped per request. Throws if there is no HttpContext or the session has not been enabled."
+    methods:
+      - StoreCsrfStateAsync
+      - GetCsrfStateAsync
+      - ClearCsrfStateAsync
+    calls:
+      - from: StoreCsrfStateAsync
+        to: EXT.Session
+        method: ISession
+      - from: GetCsrfStateAsync
+        to: EXT.Session
+        method: ISession
+      - from: ClearCsrfStateAsync
+        to: EXT.Session
+        method: ISession
+      - from: GetCsrfStateAsync
+        to: EXT.Session
+        method: IHttpContextAccessor.HttpContext
+  - id: SessionTokenBroker
+    name: SessionApiPlatformTokenBroker
+    layer: broker
+    col: 7
+    description: "Session-backed tokens; expiries are stored as unix seconds under the keys in SessionApiPlatformStorageKeys."
+    methods:
+      - StoreAccessTokenAsync
+      - GetAccessTokenAsync
+      - ClearAccessTokenAsync
+      - StoreRefreshTokenAsync
+      - GetRefreshTokenAsync
+      - ClearRefreshTokenAsync
+    calls:
+      - from: StoreAccessTokenAsync
+        to: EXT.Session
+        method: ISession
+      - from: GetAccessTokenAsync
+        to: EXT.Session
+        method: ISession
+      - from: ClearAccessTokenAsync
+        to: EXT.Session
+        method: ISession
+      - from: StoreRefreshTokenAsync
+        to: EXT.Session
+        method: ISession
+      - from: GetRefreshTokenAsync
+        to: EXT.Session
+        method: ISession
+      - from: ClearRefreshTokenAsync
+        to: EXT.Session
+        method: ISession
+      - from: GetAccessTokenAsync
+        to: EXT.Session
+        method: IHttpContextAccessor.HttpContext

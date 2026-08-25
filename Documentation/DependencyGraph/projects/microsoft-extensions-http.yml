@@ -1,0 +1,15 @@
+# Microsoft.Extensions.Http — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: ext-http
+components:
+  - id: EXT.HttpClientFactory
+    name: IHttpClientFactory / HttpClient
+    layer: external
+    col: 8
+    shared: true
+    deriveMethods: true
+    description: "The named \"NhsApiPlatform\" client registered by AddApiPlatformSdkCore. HttpBroker is the only component that touches it."
+    methods: []

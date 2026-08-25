@@ -1,0 +1,392 @@
+# NHSDigital.ApiPlatform.Sdk — components and flows
+# Part of the solution dependency graph — see README.md in this folder.
+# Data only: index.html fetches graph.yml, then each project file, and
+# assembles them. Strings with special characters are double-quoted JSON.
+
+project: sdk
+components:
+  - id: ApiPlatformClient
+    name: ApiPlatformClient
+    layer: exposer
+    col: 0
+    description: "The SDK's front door, usable two ways: resolved from DI (AddApiPlatformSdkCore), or built standalone via the static Create / the configurations-only constructor, which spins up its own ServiceCollection and falls back to the in-memory storage brokers. Exposes the two sub-clients as properties."
+    methods:
+      - Create
+      - CareIdentityServiceClient
+      - PersonalDemographicsServiceClient
+    calls:
+      - from: CareIdentityServiceClient
+        to: CIS.Client
+        method: null
+      - from: PersonalDemographicsServiceClient
+        to: PDS.Client
+        method: null
+  - id: ApiPlatformClientFacade
+    name: ApiPlatformClientFacade
+    layer: exposer
+    col: 0
+    description: "DEAD CODE at the last scan: an internal IApiPlatformClient holding the same two sub-clients, but nothing constructs or registers it — AddApiPlatformSdkCore registers a hand-built ApiPlatformClient instead. It has no inbound flows on this graph."
+    methods:
+      - CareIdentityServiceClient
+      - PersonalDemographicsServiceClient
+  - id: CIS.Client
+    name: CareIdentityServiceClient
+    layer: client
+    col: 1
+    description: "Straight passthrough to the processing service — no logic of its own."
+    methods:
+      - BuildLoginUrlAsync
+      - LogoutAsync
+      - GetAccessTokenAsync
+      - GetUserInfoAsync
+    calls:
+      - from: BuildLoginUrlAsync
+        to: CIS.Processing
+        method: BuildLoginUrlAsync
+      - from: LogoutAsync
+        to: CIS.Processing
+        method: LogoutAsync
+      - from: GetAccessTokenAsync
+        to: CIS.Processing
+        method: GetAccessTokenAsync
+      - from: GetUserInfoAsync
+        to: CIS.Processing
+        method: GetUserInfoAsync
+  - id: PDS.Client
+    name: PersonalDemographicsServiceClient
+    layer: client
+    col: 1
+    description: Straight passthrough to the PDS orchestration.
+    methods:
+      - SearchPatientsAsync
+    calls:
+      - from: SearchPatientsAsync
+        to: PDS.Orchestration
+        method: SearchPatientsAsync
+  - id: CIS.Processing
+    name: CareIdentityServiceProcessingService
+    layer: processing
+    col: 2
+    description: "Thin over the foundation service except for GetUserInfoAsync, which is the whole OAuth callback in one call: complete the callback (state check + code exchange), read the freshly stored access token, then fetch the profile."
+    methods:
+      - BuildLoginUrlAsync
+      - LogoutAsync
+      - GetAccessTokenAsync
+      - GetUserInfoAsync
+    calls:
+      - from: BuildLoginUrlAsync
+        to: CIS.Foundation
+        method: BuildLoginUrlAsync
+      - from: LogoutAsync
+        to: CIS.Foundation
+        method: LogoutAsync
+      - from: GetAccessTokenAsync
+        to: CIS.Foundation
+        method: GetAccessTokenAsync
+      - from: GetUserInfoAsync
+        to: CIS.Foundation
+        method: CallbackAsync
+      - from: GetUserInfoAsync
+        to: CIS.Foundation
+        method: GetAccessTokenAsync
+      - from: GetUserInfoAsync
+        to: CIS.Foundation
+        method: GetUserInfoAsync
+  - id: PDS.Orchestration
+    name: PdsOrchestrationService
+    layer: orchestration
+    col: 3
+    description: "Validates the search criteria, gets a CIS2 access token, refuses the call with UnauthorizedPdsOrchestrationException when it comes back empty, then hands it to PdsService."
+    methods:
+      - SearchPatientsAsync
+    calls:
+      - from: SearchPatientsAsync
+        to: CIS.Foundation
+        method: GetAccessTokenAsync
+      - from: SearchPatientsAsync
+        to: PDS.Foundation
+        method: SearchPatientsAsync
+  - id: CIS.Foundation
+    name: CareIdentityService
+    layer: foundation
+    col: 4
+    description: "The CIS2 OAuth2 implementation. BuildLoginUrl mints a CSRF state and stashes it; Callback compares the returned state, clears it, exchanges the code and stores both tokens with computed expiries; GetAccessToken serves the stored token while it has more than 60 seconds left, otherwise silently refreshes off the refresh token and returns empty when that has expired too. The private ExchangeCodeForTokenAsync / ExchangeRefreshTokenForTokenAsync helpers are where the token endpoint is actually hit — their calls are attributed to CallbackAsync and GetAccessTokenAsync respectively."
+    methods:
+      - BuildLoginUrlAsync
+      - LogoutAsync
+      - CallbackAsync
+      - GetAccessTokenAsync
+      - GetUserInfoAsync
+    calls:
+      - from: BuildLoginUrlAsync
+        to: CryptoBroker
+        method: CreateUrlSafeState
+      - from: BuildLoginUrlAsync
+        to: StateBroker
+        method: StoreCsrfStateAsync
+      - from: LogoutAsync
+        to: StateBroker
+        method: ClearCsrfStateAsync
+      - from: LogoutAsync
+        to: TokenBroker
+        method: ClearAccessTokenAsync
+      - from: LogoutAsync
+        to: TokenBroker
+        method: ClearRefreshTokenAsync
+      - from: CallbackAsync
+        to: StateBroker
+        method: GetCsrfStateAsync
+      - from: CallbackAsync
+        to: StateBroker
+        method: ClearCsrfStateAsync
+      - from: CallbackAsync
+        to: HttpBroker
+        method: PostFormAsync
+      - from: CallbackAsync
+        to: HttpBroker
+        method: GetAsync
+      - from: CallbackAsync
+        to: JsonBroker
+        method: Deserialize
+      - from: CallbackAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffset
+      - from: CallbackAsync
+        to: TokenBroker
+        method: StoreAccessTokenAsync
+      - from: CallbackAsync
+        to: TokenBroker
+        method: StoreRefreshTokenAsync
+      - from: GetAccessTokenAsync
+        to: TokenBroker
+        method: GetAccessTokenAsync
+      - from: GetAccessTokenAsync
+        to: TokenBroker
+        method: GetRefreshTokenAsync
+      - from: GetAccessTokenAsync
+        to: DateTimeBroker
+        method: GetCurrentDateTimeOffset
+      - from: GetAccessTokenAsync
+        to: HttpBroker
+        method: PostFormAsync
+      - from: GetAccessTokenAsync
+        to: JsonBroker
+        method: Deserialize
+      - from: GetAccessTokenAsync
+        to: TokenBroker
+        method: StoreAccessTokenAsync
+      - from: GetAccessTokenAsync
+        to: TokenBroker
+        method: StoreRefreshTokenAsync
+      - from: GetUserInfoAsync
+        to: HttpBroker
+        method: GetAsync
+      - from: GetUserInfoAsync
+        to: JsonBroker
+        method: Deserialize
+  - id: PDS.Foundation
+    name: PdsService
+    layer: foundation
+    col: 4
+    description: "Builds the PDS URL — /Patient/{nhsNumber} when an NHS number is supplied, otherwise a demographics query built from surname plus any of given / gender / birthdate / postcode — and issues the request with a bearer token, a fresh X-Request-ID and an application/fhir+json Accept header. Returns the raw FHIR JSON; nothing in the SDK deserialises it."
+    methods:
+      - SearchPatientsAsync
+    calls:
+      - from: SearchPatientsAsync
+        to: HttpBroker
+        method: GetAsync
+      - from: SearchPatientsAsync
+        to: IdentifierBroker
+        method: GetNewGuid
+  - id: HttpBroker
+    name: HttpBroker
+    layer: broker
+    col: 5
+    description: "Resolves the named \"NhsApiPlatform\" HttpClient per call. GetAsync takes a configureRequest callback so callers can add their own headers without the broker knowing about them."
+    methods:
+      - PostFormAsync
+      - GetAsync
+    calls:
+      - from: PostFormAsync
+        to: EXT.HttpClientFactory
+        method: "CreateClient(\"NhsApiPlatform\")"
+      - from: PostFormAsync
+        to: EXT.HttpClientFactory
+        method: HttpClient.PostAsync
+      - from: GetAsync
+        to: EXT.HttpClientFactory
+        method: "CreateClient(\"NhsApiPlatform\")"
+      - from: GetAsync
+        to: EXT.HttpClientFactory
+        method: HttpClient.SendAsync
+      - from: PostFormAsync
+        to: EXT.Cis2
+        method: POST token endpoint
+      - from: GetAsync
+        to: EXT.Cis2
+        method: GET userinfo endpoint
+      - from: GetAsync
+        to: EXT.Pds
+        method: GET /Patient
+  - id: CryptoBroker
+    name: CryptoBroker
+    layer: broker
+    col: 5
+    description: "32 random bytes, base64 then made URL-safe (trim =, + to -, / to _). This is the CSRF state for the CIS2 round trip."
+    methods:
+      - CreateUrlSafeState
+    calls:
+      - from: CreateUrlSafeState
+        to: EXT.Bcl
+        method: RandomNumberGenerator.Fill
+  - id: JsonBroker
+    name: JsonBroker
+    layer: broker
+    col: 5
+    description: System.Text.Json with JsonSerializerDefaults.Web. Serialize is part of the surface but nothing in the SDK calls it today.
+    methods:
+      - Deserialize
+      - Serialize
+    calls:
+      - from: Deserialize
+        to: EXT.Bcl
+        method: JsonSerializer.Deserialize
+      - from: Serialize
+        to: EXT.Bcl
+        method: JsonSerializer.Serialize
+  - id: DateTimeBroker
+    name: DateTimeBroker
+    layer: broker
+    col: 5
+    utility: true
+    methods:
+      - GetCurrentDateTimeOffset
+    calls:
+      - from: GetCurrentDateTimeOffset
+        to: EXT.Bcl
+        method: DateTimeOffset.UtcNow
+  - id: IdentifierBroker
+    name: IdentifierBroker
+    layer: broker
+    col: 5
+    utility: true
+    methods:
+      - GetNewGuid
+    calls:
+      - from: GetNewGuid
+        to: EXT.Bcl
+        method: Guid.NewGuid
+  - id: LoggingBroker
+    name: LoggingBroker
+    layer: broker
+    col: 5
+    utility: true
+    description: "Wraps ILogger<LoggingBroker>. Every service takes it, but it is only ever reached from the CreateAndLog* exception factories — which this graph deliberately does not draw — so it has no inbound flows here. Registered with TryAddSingleton so a host can substitute its own."
+    methods:
+      - LogErrorAsync
+      - LogCriticalAsync
+    calls:
+      - from: LogErrorAsync
+        to: EXT.Logging
+        method: ILogger.LogError
+      - from: LogCriticalAsync
+        to: EXT.Logging
+        method: ILogger.LogCritical
+  - id: StateBroker
+    name: IApiPlatformStateBroker
+    layer: broker
+    col: 5
+    description: "Holds the CSRF state between the login redirect and the callback. AddApiPlatformSdkInMemoryStorage registers the in-memory copy with TryAdd, so a host that has already registered the session one keeps it."
+    methods:
+      - StoreCsrfStateAsync
+      - GetCsrfStateAsync
+      - ClearCsrfStateAsync
+    calls:
+      - from: StoreCsrfStateAsync
+        to: MemoryStateBroker
+        method: StoreCsrfStateAsync
+      - from: StoreCsrfStateAsync
+        to: SessionStateBroker
+        method: StoreCsrfStateAsync
+      - from: GetCsrfStateAsync
+        to: MemoryStateBroker
+        method: GetCsrfStateAsync
+      - from: GetCsrfStateAsync
+        to: SessionStateBroker
+        method: GetCsrfStateAsync
+      - from: ClearCsrfStateAsync
+        to: MemoryStateBroker
+        method: ClearCsrfStateAsync
+      - from: ClearCsrfStateAsync
+        to: SessionStateBroker
+        method: ClearCsrfStateAsync
+  - id: TokenBroker
+    name: IApiPlatformTokenBroker
+    layer: broker
+    col: 5
+    description: Holds the access and refresh tokens with their expiry instants. Same TryAdd registration story as the state broker.
+    methods:
+      - StoreAccessTokenAsync
+      - GetAccessTokenAsync
+      - ClearAccessTokenAsync
+      - StoreRefreshTokenAsync
+      - GetRefreshTokenAsync
+      - ClearRefreshTokenAsync
+    calls:
+      - from: StoreAccessTokenAsync
+        to: MemoryTokenBroker
+        method: StoreAccessTokenAsync
+      - from: StoreAccessTokenAsync
+        to: SessionTokenBroker
+        method: StoreAccessTokenAsync
+      - from: GetAccessTokenAsync
+        to: MemoryTokenBroker
+        method: GetAccessTokenAsync
+      - from: GetAccessTokenAsync
+        to: SessionTokenBroker
+        method: GetAccessTokenAsync
+      - from: ClearAccessTokenAsync
+        to: MemoryTokenBroker
+        method: ClearAccessTokenAsync
+      - from: ClearAccessTokenAsync
+        to: SessionTokenBroker
+        method: ClearAccessTokenAsync
+      - from: StoreRefreshTokenAsync
+        to: MemoryTokenBroker
+        method: StoreRefreshTokenAsync
+      - from: StoreRefreshTokenAsync
+        to: SessionTokenBroker
+        method: StoreRefreshTokenAsync
+      - from: GetRefreshTokenAsync
+        to: MemoryTokenBroker
+        method: GetRefreshTokenAsync
+      - from: GetRefreshTokenAsync
+        to: SessionTokenBroker
+        method: GetRefreshTokenAsync
+      - from: ClearRefreshTokenAsync
+        to: MemoryTokenBroker
+        method: ClearRefreshTokenAsync
+      - from: ClearRefreshTokenAsync
+        to: SessionTokenBroker
+        method: ClearRefreshTokenAsync
+  - id: MemoryStateBroker
+    name: MemoryApiPlatformStateBroker
+    layer: broker
+    col: 6
+    description: "A single lock-guarded field. Registered as a singleton, so it is process-wide — fine for a console app or a test, wrong for a multi-user web host."
+    methods:
+      - StoreCsrfStateAsync
+      - GetCsrfStateAsync
+      - ClearCsrfStateAsync
+  - id: MemoryTokenBroker
+    name: MemoryApiPlatformTokenBroker
+    layer: broker
+    col: 6
+    description: "In-process token store, singleton. Same single-user caveat as the memory state broker."
+    methods:
+      - StoreAccessTokenAsync
+      - GetAccessTokenAsync
+      - ClearAccessTokenAsync
+      - StoreRefreshTokenAsync
+      - GetRefreshTokenAsync
+      - ClearRefreshTokenAsync

@@ -1,13 +1,13 @@
 ---
 name: update-dependency-graph
-description: Re-scan the solution and regenerate Documentation/DependencyGraph/graph-data.js so the interactive dependency graph matches the current source. Use when clients, services, brokers, storage implementations or cross-project wiring have changed, or when the user asks to refresh/rebuild the dependency graph.
+description: Re-scan the solution and regenerate the dependency graph data files (Documentation/DependencyGraph/graph.yml + projects/*.yml) so the interactive dependency graph matches the current source. Use when clients, services, brokers, storage implementations or cross-project wiring have changed, or when the user asks to refresh/rebuild the dependency graph.
 version: 0.1.0
 ---
 
 # Update Solution Dependency Graph
 
-Regenerate `Documentation/DependencyGraph/graph-data.js` from the current
-source. `index.html` is the renderer — do not change it unless a new concept
+Regenerate the data files — `Documentation/DependencyGraph/graph.yml` and
+`projects/*.yml` — from the current source. `index.html` is the renderer — do not change it unless a new concept
 cannot be expressed in data (new edge kind, new layer). It carries BOTH views
 behind `state.view`: `buildSingleCopyInstances` + `layoutBands` (the default)
 and `buildDuplicatedInstances` + `layoutTrees`. Anything you change in one
@@ -15,8 +15,9 @@ builder usually needs the mirror change in the other.
 
 ## 1/ Load the current model
 
-Read `Documentation/DependencyGraph/README.md` and `graph-data.js` first.
-The data file is the previous scan's snapshot; your job is a diff-and-update,
+Read `Documentation/DependencyGraph/README.md`, then `graph.yml` and the
+`projects/*.yml` files it lists. The data files are the previous scan's
+snapshot; your job is a diff-and-update,
 not a rewrite. Preserve its modelling rules:
 
 - Per-consumer duplication is done by the renderer — declare each component
@@ -39,8 +40,8 @@ not a rewrite. Preserve its modelling rules:
   `null`, and every edge is `kind: "direct"`. If an event broker ever lands,
   the renderer already supports `P(...)` / `S(...)` and automatic
   circular-flow detection; do not hand-colour anything.
-- Column map (0–8) is documented at the top of `graph-data.js` — keep new
-  components consistent with it.
+- Column map (0–8) is documented in `graph.yml` — keep new components
+  consistent with it.
 
 ## 2/ Re-scan the source
 
@@ -72,32 +73,43 @@ the `this.<field>.<Method>` calls between one declaration and the next
    never called, and public members with no callers — several exist today and
    they are recorded in the README's "Current truths".
 
-## 3/ Update graph-data.js
+## 3/ Update the data files
 
-- Components are declared explicitly with `C({...})`, edges with
-  `D(from, to)` (`null` method = header-level link).
-- Add new roots to the `roots` list in project order (it controls layout).
-- External components' method rows are DERIVED from the edges at the bottom of
-  the file — add the id to that loop rather than hand-listing rows.
+The YAML schema is documented in the README's "The data files" section —
+components live in `projects/<project>.yml`, each with `methods` and its
+outbound `calls` (`from: null` = header-level link); manifest-level lists
+(`projects`, `roots`, `events`) live in `graph.yml`.
+
+- A new component → add it to its project's file AND to `roots` in
+  `graph.yml` (project order; `shared` components must be roots).
+- Externals with `deriveMethods: true` get their rows derived from inbound
+  edges at load time — never hand-list rows on them.
+- Strings with characters beyond letters, digits, spaces and `_.-/()` must be
+  double-quoted JSON strings; the renderer parses a small YAML subset
+  (single-line scalars only, no anchors, no multi-line blocks).
+- If an edit does not show up, load the page and watch for its "graph data
+  did not load" panel — it prints the parse error.
 
 ## 4/ Verify in the browser
 
-Serve the folder over HTTP — a sandboxed viewer can block `graph-data.js` as a
-sub-resource, and the page then shows its "graph-data.js did not load" notice
+Serve the folder over HTTP — the page fetches graph.yml and the project
+files, and browsers block those fetches from file:// pages:
 instead of the graph:
 
 ```bash
 python -m http.server 8731 --bind 127.0.0.1
 ```
 
-Verify BOTH views — the header toggle, or `setView("single")` /
-`setView("duplicated")` from `javascript_tool`. Confirm:
+Verify BOTH views — the header toggle, or `window.__graph.setView("single")` /
+`window.__graph.setView("duplicated")` from `javascript_tool` (the renderer
+exposes `window.__graph` = { state, setView, select, selectRow,
+clearSelection, rebuild, fit, tracePath }). Confirm:
 
 - No console errors; the header count is in the expected range (last scan:
   25 components · 79 flows single-copy; 100 nodes · 413 flows per consumer,
   27 · 84 and 113 · 441 with utility brokers on).
-- No node-rect overlaps and no project-box overlaps — query `state.instances`
-  and `state.projBoxes` with `javascript_tool` and intersect pairwise, in each
+- No node-rect overlaps and no project-box overlaps — query `window.__graph.state.instances`
+  and `.projBoxes` with `javascript_tool` and intersect pairwise, in each
   view, with the utility toggle both off and on.
 - No dropped edges: every `shared` component appears in `roots`.
 - Click one client, one foundation service and one method row: the side-panel
