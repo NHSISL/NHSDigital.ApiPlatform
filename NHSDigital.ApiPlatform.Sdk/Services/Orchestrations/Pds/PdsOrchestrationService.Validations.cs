@@ -1,50 +1,52 @@
 // ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using NHSDigital.ApiPlatform.Sdk.Models.Foundations.CareIdentityServices.Exceptions;
+using NHSDigital.ApiPlatform.Sdk.Models.Foundations.Pds;
+using NHSDigital.ApiPlatform.Sdk.Models.Orchestrations.Pds.Exceptions;
 using Xeptions;
 
 namespace NHSDigital.ApiPlatform.Sdk.Services.Orchestrations.Pds
 {
     internal sealed partial class PdsOrchestrationService
     {
-        public void ValidateOnSearchPatientsAsync(
-            string family,
-            IEnumerable<string> given,
-            string gender,
-            DateOnly? birthdate)
+        public void ValidateOnSearchPatients(SearchCriteria searchCriteria)
         {
+            ValidateSearchCriteriaIsNotNull(searchCriteria);
+
             Validate(
-                createException: () => new InvalidArgumentCareIdentityServiceException(
+                createException: () => new InvalidArgumentPdsOrchestrationException(
                     message: "Invalid argument(s), please correct the errors and try again."),
 
-                (Rule: IsInvalid(family), Parameter: nameof(family)),
-                (Rule: IsInvalid(given), Parameter: nameof(given)),
-                (Rule: IsInvalid(gender), Parameter: nameof(gender)),
-                (Rule: IsInvalid(birthdate), Parameter: nameof(birthdate)));
+                (Rule: IsInvalidSearchCriteria(searchCriteria), Parameter: nameof(searchCriteria)));
         }
 
-        private static dynamic IsInvalid(string? text) => new
+        public void ValidateAccessToken(string accessToken)
         {
-            Condition = string.IsNullOrWhiteSpace(text),
-            Message = "Text is required"
-        };
+            if (string.IsNullOrWhiteSpace(accessToken))
+            {
+                throw new UnauthorizedPdsOrchestrationException(
+                    message: "Unauthorized - Unable to retrieve access token.");
+            }
+        }
 
-        private static dynamic IsInvalid(DateOnly? dateOnly) => new
+        private static void ValidateSearchCriteriaIsNotNull(SearchCriteria searchCriteria)
         {
-            Condition = dateOnly == null,
-            Message = "Date is required"
-        };
+            if (searchCriteria is null)
+            {
+                throw new NullSearchCriteriaPdsOrchestrationException(
+                    message: "Search criteria is null.");
+            }
+        }
 
-        private static dynamic IsInvalid(IEnumerable<string> textList) => new
+        private static dynamic IsInvalidSearchCriteria(SearchCriteria searchCriteria) => new
         {
-            Condition = textList != null &&
-                        textList.Any(text => string.IsNullOrWhiteSpace(text)),
+            Condition =
+                string.IsNullOrWhiteSpace(searchCriteria.NhsNumber) &&
+                string.IsNullOrWhiteSpace(searchCriteria.Surname),
 
-            Message = "List contains null or whitespace values"
+            Message = "Either an NHS number or a surname is required"
         };
 
         private static void Validate<T>(

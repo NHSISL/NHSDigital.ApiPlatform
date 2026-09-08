@@ -28,6 +28,16 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
                 (Rule: IsInvalid(code), Parameter: nameof(code)));
         }
 
+        public void ValidateStateMatches(string state, string expectedState)
+        {
+            if (string.IsNullOrWhiteSpace(expectedState) ||
+                string.Equals(state, expectedState, StringComparison.Ordinal) is false)
+            {
+                throw new InvalidStateCareIdentityServiceException(
+                    message: "Invalid state parameter.");
+            }
+        }
+
         public void ValidateAccessToken(string accessToken)
         {
             if (string.IsNullOrWhiteSpace(accessToken))

@@ -1,4 +1,4 @@
-// ---------------------------------------------------------
+﻿// ---------------------------------------------------------
 // Copyright (c) North East London ICB. All rights reserved.
 // ---------------------------------------------------------
 using System;
@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Cryptographies;
 using NHSDigital.ApiPlatform.Sdk.Brokers.DateTimes;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Https;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Loggings;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Serializations;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Storages;
 using NHSDigital.ApiPlatform.Sdk.Models.Configurations;
@@ -24,6 +25,7 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
         private readonly IDateTimeBroker dateTimeBroker;
         private readonly IApiPlatformStateBroker stateBroker;
         private readonly IApiPlatformTokenBroker tokenBroker;
+        private readonly ILoggingBroker loggingBroker;
 
         public CareIdentityService(
             ApiPlatformConfigurations configurations,
@@ -32,8 +34,10 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             ICryptoBroker cryptoBroker,
             IDateTimeBroker dateTimeBroker,
             IApiPlatformStateBroker stateBroker,
-            IApiPlatformTokenBroker tokenBroker)
+            IApiPlatformTokenBroker tokenBroker,
+            ILoggingBroker loggingBroker)
         {
+            this.loggingBroker = loggingBroker;
             this.configurations = configurations;
             this.httpBroker = httpBroker;
             this.jsonBroker = jsonBroker;
@@ -42,9 +46,11 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             this.stateBroker = stateBroker;
             this.tokenBroker = tokenBroker;
         }
+
         public ValueTask<string> BuildLoginUrlAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             string csrfState = this.cryptoBroker.CreateUrlSafeState();
             await this.stateBroker.StoreCsrfStateAsync(csrfState, cancellationToken);
             CareIdentityConfigurations careIdentityConfigurations = this.configurations.CareIdentity;
@@ -63,16 +69,17 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             }
 
             return url;
-        });
+        }, cancellationToken);
 
         public ValueTask LogoutAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             await this.stateBroker.ClearCsrfStateAsync(cancellationToken);
             await this.tokenBroker.ClearAccessTokenAsync(cancellationToken);
             await this.tokenBroker.ClearRefreshTokenAsync(cancellationToken);
             await this.tokenBroker.ClearActiveRoleAsync(cancellationToken);
-        });
+        }, cancellationToken);
 
         public ValueTask CallbackAsync(
             string code,
@@ -80,16 +87,11 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnCallback(code, state);
 
             string? expectedState = await this.stateBroker.GetCsrfStateAsync(cancellationToken);
-
-            if (string.IsNullOrWhiteSpace(expectedState) ||
-                string.Equals(state, expectedState, StringComparison.Ordinal) is false)
-            {
-                throw new InvalidOperationException("Invalid state parameter.");
-            }
-
+            ValidateStateMatches(state, expectedState);
             await this.stateBroker.ClearCsrfStateAsync(cancellationToken);
 
             TokenResult token = await ExchangeCodeForTokenAsync(code, cancellationToken);
@@ -119,11 +121,13 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
                     userInfo.NhsIdNrbacRoles[0].PersonRoleId,
                     cancellationToken);
             }
-        });
+        }, cancellationToken);
 
         public ValueTask<string> GetAccessTokenAsync(CancellationToken cancellationToken = default) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var (accessToken, accessExpiresAtUtc) =
                 await this.tokenBroker.GetAccessTokenAsync(cancellationToken);
 
@@ -171,11 +175,12 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             ValidateAccessToken(refreshed.AccessToken);
 
             return refreshed.AccessToken;
-        });
+        }, cancellationToken);
 
         public ValueTask<NhsUserInfo> GetUserInfoAsync(string accessToken, CancellationToken cancellationToken) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnGetUserInfo(accessToken);
             CareIdentityConfigurations careIdentityConfigurations = this.configurations.CareIdentity;
 
@@ -191,11 +196,12 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             NhsUserInfo? userInfo = this.jsonBroker.Deserialize<NhsUserInfo>(json);
 
             return userInfo ?? throw new InvalidOperationException("UserInfo endpoint returned an invalid payload.");
-        });
+        }, cancellationToken);
 
         private ValueTask<TokenResult> ExchangeCodeForTokenAsync(string code, CancellationToken cancellationToken) =>
         TryCatch(async () =>
         {
+            cancellationToken.ThrowIfCancellationRequested();
             ValidateOnExchangeCodeForToken(code);
             CareIdentityConfigurations careIdentityConfigurations = this.configurations.CareIdentity;
 
@@ -217,13 +223,14 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
             TokenResult? token = this.jsonBroker.Deserialize<TokenResult>(json);
 
             return token ?? throw new InvalidOperationException("Token endpoint returned an invalid payload.");
-        });
+        }, cancellationToken);
 
         private ValueTask<TokenResult> ExchangeRefreshTokenForTokenAsync(
             string refreshToken,
             CancellationToken cancellationToken) =>
          TryCatch(async () =>
          {
+             cancellationToken.ThrowIfCancellationRequested();
              ValidateOnExchangeRefreshTokenForToken(refreshToken);
 
              CareIdentityConfigurations careIdentityConfigurations = this.configurations.CareIdentity;
@@ -245,6 +252,6 @@ namespace NHSDigital.ApiPlatform.Sdk.Services.Foundations.CareIdentityServices
              TokenResult? token = this.jsonBroker.Deserialize<TokenResult>(json);
 
              return token ?? throw new InvalidOperationException("Token endpoint returned an invalid payload.");
-         });
+         }, cancellationToken);
     }
 }

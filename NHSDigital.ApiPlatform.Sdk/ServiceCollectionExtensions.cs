@@ -8,6 +8,7 @@ using NHSDigital.ApiPlatform.Sdk.Brokers.Cryptographies;
 using NHSDigital.ApiPlatform.Sdk.Brokers.DateTimes;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Https;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Identifiers;
+using NHSDigital.ApiPlatform.Sdk.Brokers.Loggings;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Serializations;
 using NHSDigital.ApiPlatform.Sdk.Brokers.Storages;
 using NHSDigital.ApiPlatform.Sdk.Clients.ApiPlatforms;
@@ -33,6 +34,8 @@ namespace NHSDigital.ApiPlatform.Sdk
 			services.AddSingleton<IIdentifierBroker, IdentifierBroker>();
 			services.AddSingleton<IJsonBroker, JsonBroker>();
 			services.AddHttpClient("NhsApiPlatform");
+			services.AddLogging();
+			services.TryAddSingleton<ILoggingBroker, LoggingBroker>();
 			services.AddTransient<IHttpBroker, HttpBroker>();
 			services.AddScoped<ICareIdentityService, CareIdentityService>();
 			services.AddScoped<ICareIdentityServiceProcessingService, CareIdentityServiceProcessingService>();
