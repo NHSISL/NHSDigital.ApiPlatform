@@ -80,12 +80,18 @@ enabled once in the repository's Settings → Pages (source: GitHub Actions).
   services split `HttpRequestException`: a 4xx becomes a
   `*DependencyValidationException` (the caller sent something the dependency
   rejected), a 5xx or a transport failure becomes a `*DependencyException`.
-- **The storage brokers are the extension seam.** `IApiPlatformStateBroker`
-  and `IApiPlatformTokenBroker` each have an in-memory implementation in the
-  Sdk and a session-backed one in Sdk.AspNetCore. Both are registered with
-  `TryAdd`, so whichever the host registers first wins — call
-  `AddApiPlatformSdkAspNetCore()` before `AddApiPlatformSdkInMemoryStorage()`
-  in a web host, or you get the process-wide singletons.
+- **The storage brokers are the extension seam, and order does not matter.**
+  `IApiPlatformStateBroker` and `IApiPlatformTokenBroker` each have an
+  in-memory implementation in the Sdk and a session-backed one in
+  Sdk.AspNetCore. `AddApiPlatformSdkInMemoryStorage` uses `TryAddSingleton`,
+  but `AddApiPlatformSdkAspNetCore` uses plain `AddScoped` — which appends
+  rather than no-ops, and the last registration wins. So calling both in
+  either order leaves a web host on the session-backed brokers. One caveat:
+  last-wins governs `GetService`/`GetRequiredService` only. If
+  `AddApiPlatformSdkInMemoryStorage` ran first its singleton descriptor is
+  still in the collection, so `GetServices<IApiPlatformStateBroker>()` returns
+  both — a host that enumerates implementations can still reach the
+  process-wide singleton.
 - **The in-memory brokers are singletons and hold one user's state.** Fine
   for a console app or a test; wrong for a multi-user web host.
 - **CIS2 runs without PKCE** — the code says so explicitly; only `client_id`,

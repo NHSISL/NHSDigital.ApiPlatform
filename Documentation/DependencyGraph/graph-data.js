@@ -214,11 +214,11 @@
      ------------------------------------------------------------------ */
   C({ id: "StateBroker", name: "IApiPlatformStateBroker", project: "sdk", layer: "broker", col: 5,
       methods: ["StoreCsrfStateAsync", "GetCsrfStateAsync", "ClearCsrfStateAsync"],
-      description: "Holds the CSRF state between the login redirect and the callback. AddApiPlatformSdkInMemoryStorage registers the in-memory copy with TryAdd, so a host that has already registered the session one keeps it." });
+      description: "Holds the CSRF state between the login redirect and the callback. AddApiPlatformSdkInMemoryStorage registers the in-memory copy with TryAdd; AddApiPlatformSdkAspNetCore registers the session one with AddScoped, which appends and therefore wins whichever order the two are called in." });
   C({ id: "TokenBroker", name: "IApiPlatformTokenBroker", project: "sdk", layer: "broker", col: 5,
       methods: ["StoreAccessTokenAsync", "GetAccessTokenAsync", "ClearAccessTokenAsync",
                 "StoreRefreshTokenAsync", "GetRefreshTokenAsync", "ClearRefreshTokenAsync"],
-      description: "Holds the access and refresh tokens with their expiry instants. Same TryAdd registration story as the state broker." });
+      description: "Holds the access and refresh tokens with their expiry instants. Same registration story as the state broker - the session implementation wins in an ASP.NET Core host regardless of call order." });
 
   C({ id: "MemoryStateBroker", name: "MemoryApiPlatformStateBroker", project: "sdk", layer: "broker", col: 6,
       methods: ["StoreCsrfStateAsync", "GetCsrfStateAsync", "ClearCsrfStateAsync"],
