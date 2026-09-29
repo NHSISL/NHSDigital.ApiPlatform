@@ -41,16 +41,10 @@ namespace NHSDigital.ApiPlatform.Infrastructure.Services
                         new Job
                         {
                             Name = "Build",
-                            RunsOn = BuildMachines.WindowsLatest,
+                            RunsOn = BuildMachines.UbuntuLatest,
 
                             Steps = new List<GithubTask>
                             {
-                                new GithubTask
-                                {
-                                    Name = "Enable long paths for Git",
-                                    Run = "git config --system core.longpaths true"
-                                },
-
                                 new CheckoutTaskV5
                                 {
                                     Name = "Check out"
