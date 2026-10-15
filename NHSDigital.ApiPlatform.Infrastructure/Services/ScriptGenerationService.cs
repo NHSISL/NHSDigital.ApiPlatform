@@ -201,7 +201,7 @@ namespace NHSDigital.ApiPlatform.Infrastructure.Services
             $failedProjects = @()
             foreach ($project in $projects) {
               Write-Host "Running tests for: $($project.FullName)"
-              dotnet test $project.FullName --no-build --verbosity normal
+              dotnet test --project $project.FullName --no-build --verbosity normal --ignore-exit-code 8
               if ($LASTEXITCODE -ne 0) { $failedProjects += $project.Name }
             }
             if ($failedProjects.Count -gt 0) {
